@@ -34,6 +34,7 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace MarcelJoachimKloubert.ComponentModel
@@ -293,7 +294,8 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// <exception cref="MissingMemberException">
         /// Property was not found.
         /// </exception>
-        protected TProperty Get<TProperty>(IEnumerable<char> propertyName)
+        protected TProperty Get<TProperty>([CallerMemberName]
+                                           IEnumerable<char> propertyName = null)
         {
             bool found;
             return this.Get<TProperty>(propertyName: propertyName,
@@ -962,7 +964,9 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// <exception cref="MissingMemberException">
         /// Property was not found.
         /// </exception>
-        protected bool? Set<TProperty>(TProperty newValue, IEnumerable<char> propertyName)
+        protected bool? Set<TProperty>(TProperty newValue,
+                                       [CallerMemberName]
+                                       IEnumerable<char> propertyName = null)
         {
             var pn = this.NormalizePropertyName(propertyName);
 

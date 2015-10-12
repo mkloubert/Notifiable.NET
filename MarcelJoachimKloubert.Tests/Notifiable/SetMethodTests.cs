@@ -61,9 +61,9 @@ namespace MarcelJoachimKloubert.Tests.Notifiable
 
             public object Test1
             {
-                get { return this.Get(() => this.Test1); }
+                get { return this.Get<object>(); }
 
-                set { this.Set(value, () => this.Test1); }
+                set { this.Set(value); }
             }
 
             [ReceiveValueFrom("Test1")]
