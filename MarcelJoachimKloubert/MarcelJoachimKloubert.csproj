@@ -47,6 +47,9 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Collections\NotifiableDictionary.cs" />
+    <Compile Include="Collections\NotifiableList.cs" />
+    <Compile Include="Collections\NotifiableCollection.cs" />
     <Compile Include="ComponentModel\ErrorEventArgs.cs" />
     <Compile Include="ComponentModel\IReceiveValueFromArgs.cs" />
     <Compile Include="ComponentModel\NotifiableBase.cs" />
