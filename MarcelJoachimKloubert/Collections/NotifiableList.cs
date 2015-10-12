@@ -99,7 +99,17 @@ namespace MarcelJoachimKloubert.Collections
         {
             get { return this[index]; }
 
-            set { this[index] = (T)value; }
+            set
+            {
+                this.IfIList(
+                    (list, state) => list[state.Index] = state.Value,
+                    new
+                    {
+                        Index = index,
+                        Value = value,
+                    },
+                    (list, state) => list[state.Index] = (T)state.Value);
+            }
         }
 
         /// <summary>
@@ -374,7 +384,7 @@ namespace MarcelJoachimKloubert.Collections
         /// <paramref name="actionYes" /> and/or <paramref name="actionStateFactory" /> is <see langword="null" />.
         /// </exception>
         protected void IfIList<TState>(Action<IList, TState> actionYes,
-                                       Func<NotifiableCollection<T>, TState> actionStateFactory,
+                                       Func<NotifiableList<T>, TState> actionStateFactory,
                                        Action<IList<T>, TState> actionNo = null)
         {
             if (actionYes == null)
@@ -485,7 +495,7 @@ namespace MarcelJoachimKloubert.Collections
         /// <paramref name="funcYes" /> and/or <paramref name="funcStateFactory" /> is <see langword="null" />.
         /// </exception>
         protected TResult IfIList<TState, TResult>(Func<IList, TState, TResult> funcYes,
-                                                   Func<NotifiableCollection<T>, TState> funcStateFactory,
+                                                   Func<NotifiableList<T>, TState> funcStateFactory,
                                                    Func<IList<T>, TState, TResult> funcNo = null)
         {
             if (funcYes == null)

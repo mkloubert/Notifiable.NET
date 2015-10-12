@@ -79,12 +79,8 @@ namespace MarcelJoachimKloubert.Collections
         {
             get
             {
-                if (this.BaseCollection is IDictionary)
-                {
-                    return ((IDictionary)this.BaseCollection).IsFixedSize;
-                }
-
-                return this.IsReadOnly;
+                return this.IfIDictionary((dict) => dict.IsFixedSize,
+                                          (dict) => dict.IsReadOnly);
             }
         }
 
@@ -98,7 +94,11 @@ namespace MarcelJoachimKloubert.Collections
 
         ICollection IDictionary.Keys
         {
-            get { return AsCollection(this.Keys); }
+            get
+            {
+                return this.IfIDictionary((dict) => dict.Keys,
+                                          (dict) => AsCollection(dict.Keys));
+            }
         }
 
         /// <summary>
@@ -131,7 +131,18 @@ namespace MarcelJoachimKloubert.Collections
         {
             get { return this[(TKey)key]; }
 
-            set { this[(TKey)key] = (TValue)value; }
+            set
+            {
+                this.IfIDictionary(
+                    (dict, state) => dict[state.Key] = state.Value,
+                    new
+
+                    {
+                        Key = key,
+                        Value = value,
+                    },
+                    (dict, state) => dict[(TKey)state.Key] = (TValue)state.Value);
+            }
         }
 
         /// <summary>
@@ -144,12 +155,16 @@ namespace MarcelJoachimKloubert.Collections
 
         ICollection IDictionary.Values
         {
-            get { return AsCollection(this.Values); }
+            get
+            {
+                return this.IfIDictionary((dict) => dict.Values,
+                                          (dict) => AsCollection(dict.Values));
+            }
         }
 
         #endregion Properties (8)
 
-        #region Methods (17)
+        #region Methods (23)
 
         /// <summary>
         /// <see cref="IDictionary{TKey, TValue}.Add(TKey, TValue)" />
@@ -166,12 +181,23 @@ namespace MarcelJoachimKloubert.Collections
 
         void IDictionary.Add(object key, object value)
         {
-            this.Add((TKey)key, (TValue)value);
+            this.IfIDictionary((dict, state) => dict.Add(state.Key, state.Value),
+                               new
+                               {
+                                   Key = key,
+                                   Value = value,
+                               },
+                               (dict, state) => dict.Add((TKey)state.Key, (TValue)state.Value));
         }
 
         bool IDictionary.Contains(object key)
         {
-            return this.ContainsKey((TKey)key);
+            return this.IfIDictionary((dict, state) => dict.Contains(state.Key),
+                                      new
+                                      {
+                                          Key = key,
+                                      },
+                                      (dict, state) => dict.ContainsKey((TKey)state.Key));
         }
 
         /// <summary>
@@ -342,12 +368,209 @@ namespace MarcelJoachimKloubert.Collections
 
         IDictionaryEnumerator IDictionary.GetEnumerator()
         {
-            if (this.BaseCollection is IDictionary)
+            return this.IfIDictionary((dict) => dict.GetEnumerator(),
+                                      (dict) => new Dictionary<TKey, TValue>(dict).GetEnumerator());
+        }
+
+        /// <summary>
+        /// Invokes an action for <see cref="NotifiableCollection{T}.BaseCollection" /> if it is an <see cref="IDictionary" /> object.
+        /// Otherwise an optional alternative action.
+        /// </summary>
+        /// <param name="actionYes">The function to invoke if base collection is an <see cref="IDictionary" /> object.</param>
+        /// <param name="actionNo">The optional alternative actions to invoke.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="actionYes" /> is <see langword="null" />.
+        /// </exception>
+        protected void IfIDictionary(Action<IDictionary> actionYes,
+                                     Action<IDictionary<TKey, TValue>> actionNo = null)
+        {
+            if (actionYes == null)
             {
-                return ((IDictionary)this.BaseCollection).GetEnumerator();
+                throw new ArgumentNullException("funcYes");
             }
 
-            return new Dictionary<TKey, TValue>(this.BaseCollection).GetEnumerator();
+            this.IfIDictionary(actionYes: (dict, state) => state.ActionYes(dict),
+                               actionState: new
+                                   {
+                                       ActionNo = actionNo,
+                                       ActionYes = actionYes,
+                                   },
+                               actionNo: (coll, state) =>
+                                   {
+                                       state.ActionNo(coll);
+                                   });
+        }
+
+        /// <summary>
+        /// Invokes an action for <see cref="NotifiableCollection{T}.BaseCollection" /> if it is an <see cref="IDictionary" /> object.
+        /// Otherwise an optional alternative action.
+        /// </summary>
+        /// <typeparam name="TState">Type of the second arguments of the actions.</typeparam>
+        /// <param name="actionYes">The function to invoke if base collection is an <see cref="IDictionary" /> object.</param>
+        /// <param name="actionState">The value for the second arguments of the actions.</param>
+        /// <param name="actionNo">The optional alternative actions to invoke.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="actionYes" /> is <see langword="null" />.
+        /// </exception>
+        protected void IfIDictionary<TState>(Action<IDictionary, TState> actionYes,
+                                             TState actionState,
+                                             Action<IDictionary<TKey, TValue>, TState> actionNo = null)
+        {
+            this.IfIDictionary<TState>(actionYes: actionYes,
+                                       actionNo: actionNo,
+                                       actionStateFactory: (dict) => actionState);
+        }
+
+        /// <summary>
+        /// Invokes an action for <see cref="NotifiableCollection{T}.BaseCollection" /> if it is an <see cref="IDictionary" /> object.
+        /// Otherwise an optional alternative action.
+        /// </summary>
+        /// <typeparam name="TState">Type of the second arguments of the actions.</typeparam>
+        /// <param name="actionYes">The function to invoke if base collection is an <see cref="IDictionary" /> object.</param>
+        /// <param name="actionStateFactory">The function that returns the value for the second arguments of the actions.</param>
+        /// <param name="actionNo">The optional alternative actions to invoke.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="actionYes" /> and/or <paramref name="actionStateFactory" /> is <see langword="null" />.
+        /// </exception>
+        protected void IfIDictionary<TState>(Action<IDictionary, TState> actionYes,
+                                             Func<NotifiableDictionary<TKey, TValue>, TState> actionStateFactory,
+                                             Action<IDictionary<TKey, TValue>, TState> actionNo = null)
+        {
+            if (actionYes == null)
+            {
+                throw new ArgumentNullException("funcYes");
+            }
+
+            if (actionStateFactory == null)
+            {
+                throw new ArgumentNullException("funcStateFactory");
+            }
+
+            this.IfIDictionary(
+                funcYes: (dict, state) =>
+                    {
+                        state.ActionYes(dict, state.State);
+
+                        return (object)null;
+                    },
+                funcState: new
+                    {
+                        ActionNo = actionNo,
+                        ActionYes = actionYes,
+                        State = actionStateFactory(this),
+                    },
+                funcNo: (dict, state) =>
+                    {
+                        if (state.ActionNo != null)
+                        {
+                            state.ActionNo(dict, state.State);
+                        }
+
+                        return (object)null;
+                    });
+        }
+
+        /// <summary>
+        /// Invokes a function for <see cref="NotifiableCollection{T}.BaseCollection" /> if it is an <see cref="IDictionary" /> object.
+        /// Otherwise an optional alternative function.
+        /// </summary>
+        /// <typeparam name="TResult">The result of the functions.</typeparam>
+        /// <param name="funcYes">The function to invoke if base collection is an <see cref="IDictionary" /> object.</param>
+        /// <param name="funcNo">
+        /// The optional alternative function to invoke.
+        /// If not defined, a default logic is invoked that returns a default value.
+        /// </param>
+        /// <returns>The result of the matching function.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="funcYes" /> is <see langword="null" />.
+        /// </exception>
+        protected TResult IfIDictionary<TResult>(Func<IDictionary, TResult> funcYes,
+                                                 Func<IDictionary<TKey, TValue>, TResult> funcNo = null)
+        {
+            if (funcYes == null)
+            {
+                throw new ArgumentNullException("funcYes");
+            }
+
+            return this.IfIDictionary(funcYes: (dict, state) => state.FunctionYes(dict),
+                                      funcState: new
+                                          {
+                                              FunctionNo = funcNo,
+                                              FunctionYes = funcYes,
+                                          },
+                                      funcNo: (dict, state) => state.FunctionNo != null ? state.FunctionNo(dict)
+                                                                                        : default(TResult));
+        }
+
+        /// <summary>
+        /// Invokes a function for <see cref="NotifiableCollection{T}.BaseCollection" /> if it is an <see cref="IDictionary" /> object.
+        /// Otherwise an optional alternative function.
+        /// </summary>
+        /// <typeparam name="TState">Type of the second arguments of the functions.</typeparam>
+        /// <typeparam name="TResult">The result of the functions.</typeparam>
+        /// <param name="funcYes">The function to invoke if base collection is an <see cref="IDictionary" /> object.</param>
+        /// <param name="funcState">The value for the second arguments of the functions.</param>
+        /// <param name="funcNo">
+        /// The optional alternative function to invoke.
+        /// If not defined, a default logic is invoked that returns a default value.
+        /// </param>
+        /// <returns>The result of the matching function.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="funcYes" /> is <see langword="null" />.
+        /// </exception>
+        protected TResult IfIDictionary<TState, TResult>(Func<IDictionary, TState, TResult> funcYes,
+                                                         TState funcState,
+                                                         Func<IDictionary<TKey, TValue>, TState, TResult> funcNo = null)
+        {
+            return this.IfIDictionary<TState, TResult>(funcYes: funcYes,
+                                                       funcNo: funcNo,
+                                                       funcStateFactory: (dict) => funcState);
+        }
+
+        /// <summary>
+        /// Invokes a function for <see cref="NotifiableCollection{T}.BaseCollection" /> if it is an <see cref="IDictionary" /> object.
+        /// Otherwise an optional alternative function.
+        /// </summary>
+        /// <typeparam name="TState">Type of the second arguments of the functions.</typeparam>
+        /// <typeparam name="TResult">The result of the functions.</typeparam>
+        /// <param name="funcYes">The function to invoke if base collection is an <see cref="IDictionary" /> object.</param>
+        /// <param name="funcStateFactory">The function that returns the value for the second arguments of the functions.</param>
+        /// <param name="funcNo">
+        /// The optional alternative function to invoke.
+        /// If not defined, a default logic is invoked that returns a default value.
+        /// </param>
+        /// <returns>The result of the matching function.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="funcYes" /> and/or <paramref name="funcStateFactory" /> is <see langword="null" />.
+        /// </exception>
+        protected TResult IfIDictionary<TState, TResult>(Func<IDictionary, TState, TResult> funcYes,
+                                                         Func<NotifiableDictionary<TKey, TValue>, TState> funcStateFactory,
+                                                         Func<IDictionary<TKey, TValue>, TState, TResult> funcNo = null)
+        {
+            if (funcYes == null)
+            {
+                throw new ArgumentNullException("funcYes");
+            }
+
+            if (funcStateFactory == null)
+            {
+                throw new ArgumentNullException("funcStateFactory");
+            }
+
+            if (funcNo == null)
+            {
+                funcNo = (dict, state) => default(TResult);
+            }
+
+            var funcState = funcStateFactory(this);
+
+            var dictionary = this.BaseCollection as IDictionary;
+            if (dictionary != null)
+            {
+                return funcYes(dictionary, funcState);
+            }
+
+            return funcNo(this.BaseCollection, funcState);
         }
 
         /// <summary>
@@ -414,7 +637,12 @@ namespace MarcelJoachimKloubert.Collections
 
         void IDictionary.Remove(object key)
         {
-            this.Remove((TKey)key);
+            this.IfIDictionary((dict, state) => dict.Remove(state.Key),
+                               new
+                               {
+                                   Key = key,
+                               },
+                               (dict, state) => dict.Remove((TKey)state.Key));
         }
 
         [DebuggerStepThrough]
@@ -441,6 +669,6 @@ namespace MarcelJoachimKloubert.Collections
             return this.BaseCollection.TryGetValue(key, out value);
         }
 
-        #endregion Methods (17)
+        #endregion Methods (23)
     }
 }
