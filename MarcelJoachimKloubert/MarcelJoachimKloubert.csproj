@@ -47,7 +47,9 @@
     <Compile Include="ComponentModel\ErrorEventArgs.cs" />
     <Compile Include="ComponentModel\IReceiveValueFromArgs.cs" />
     <Compile Include="ComponentModel\NotifiableBase.cs" />
-    <Compile Include="ComponentModel\NotifiableBase.ReceiveValueFromArgs.cs" />
+    <Compile Include="ComponentModel\NotifiableBase.ReceiveValueFromArgs.cs">
+      <DependentUpon>NotifiableBase.cs</DependentUpon>
+    </Compile>
     <Compile Include="ComponentModel\ReceiveNotificationFromAttribute.cs" />
     <Compile Include="ComponentModel\ReceiveValueFromAttribute.cs" />
     <Compile Include="DisposableBase.cs" />
