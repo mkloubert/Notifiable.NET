@@ -74,6 +74,7 @@ namespace MarcelJoachimKloubert.Collections
         /// <summary>
         /// <see cref="IDictionary.IsFixedSize" />
         /// </summary>
+        [ReceiveNotificationFrom("IsReadOnly")]
         public bool IsFixedSize
         {
             get

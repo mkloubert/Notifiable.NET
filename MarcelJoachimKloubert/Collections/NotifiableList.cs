@@ -104,6 +104,7 @@ namespace MarcelJoachimKloubert.Collections
         /// <summary>
         /// <see cref="IList.IsFixedSize" />
         /// </summary>
+        [ReceiveNotificationFrom("IsReadOnly")]
         public bool IsFixedSize
         {
             get
