@@ -99,7 +99,17 @@ namespace MarcelJoachimKloubert.Collections
         {
             get { return this[index]; }
 
-            set { this[index] = (T)value; }
+            set
+            {
+                this.IfIList(
+                    (list, state) => list[state.Index] = state.Value,
+                    new
+                    {
+                        Index = index,
+                        Value = value,
+                    },
+                    (list, state) => list[state.Index] = (T)state.Value);
+            }
         }
 
         /// <summary>
@@ -110,28 +120,49 @@ namespace MarcelJoachimKloubert.Collections
         {
             get
             {
-                if (this.BaseCollection is IList)
-                {
-                    return ((IList)this.BaseCollection).IsFixedSize;
-                }
-
-                return this.IsReadOnly;
+                return this.IfIList((list) => list.IsFixedSize,
+                                    (list) => list.IsReadOnly);
             }
         }
 
         #endregion Properties (3)
 
-        #region Methods (16)
+        #region Methods (22)
 
         int IList.Add(object value)
         {
-            this.Add((T)value);
-            return this.Count;
+            return this.IfIList(
+                (list, state) =>
+                {
+                    var result = list.Add(state.Value);
+
+                    var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Add,
+                                                                 changedItem: state.Value);
+                    state.List.RaiseCollectionChanged(e);
+
+                    return result;
+                },
+                new
+                {
+                    List = this,
+                    Value = value,
+                },
+                (list, state) =>
+                {
+                    state.List.Add((T)state.Value);
+                    return state.List.Count;
+                });
         }
 
         bool IList.Contains(object value)
         {
-            return this.Contains((T)value);
+            return this.IfIList(
+                (list, state) => list.Contains(state.Value),
+                new
+                {
+                    Value = value,
+                },
+                (list, state) => list.Contains((T)state.Value));
         }
 
         /// <summary>
@@ -293,6 +324,207 @@ namespace MarcelJoachimKloubert.Collections
         }
 
         /// <summary>
+        /// Invokes an action for <see cref="NotifiableCollection{T}.BaseCollection" /> if it is an <see cref="IList" /> object.
+        /// Otherwise an optional alternative action.
+        /// </summary>
+        /// <param name="actionYes">The function to invoke if base collection is an <see cref="IList" /> object.</param>
+        /// <param name="actionNo">The optional alternative actions to invoke.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="actionYes" /> is <see langword="null" />.
+        /// </exception>
+        protected void IfIList(Action<IList> actionYes,
+                               Action<IList<T>> actionNo = null)
+        {
+            if (actionYes == null)
+            {
+                throw new ArgumentNullException("funcYes");
+            }
+
+            this.IfIList(actionYes: (list, state) => state.ActionYes(list),
+                         actionState: new
+                             {
+                                 ActionNo = actionNo,
+                                 ActionYes = actionYes,
+                             },
+                         actionNo: (list, state) =>
+                             {
+                                 state.ActionNo(list);
+                             });
+        }
+
+        /// <summary>
+        /// Invokes an action for <see cref="NotifiableCollection{T}.BaseCollection" /> if it is an <see cref="IList" /> object.
+        /// Otherwise an optional alternative action.
+        /// </summary>
+        /// <typeparam name="TState">Type of the second arguments of the actions.</typeparam>
+        /// <param name="actionYes">The function to invoke if base collection is an <see cref="IList" /> object.</param>
+        /// <param name="actionState">The value for the second arguments of the actions.</param>
+        /// <param name="actionNo">The optional alternative actions to invoke.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="actionYes" /> is <see langword="null" />.
+        /// </exception>
+        protected void IfIList<TState>(Action<IList, TState> actionYes,
+                                       TState actionState,
+                                       Action<IList<T>, TState> actionNo = null)
+        {
+            this.IfIList<TState>(actionYes: actionYes,
+                                 actionNo: actionNo,
+                                 actionStateFactory: (list) => actionState);
+        }
+
+        /// <summary>
+        /// Invokes an action for <see cref="NotifiableCollection{T}.BaseCollection" /> if it is an <see cref="IList" /> object.
+        /// Otherwise an optional alternative action.
+        /// </summary>
+        /// <typeparam name="TState">Type of the second arguments of the actions.</typeparam>
+        /// <param name="actionYes">The function to invoke if base collection is an <see cref="IList" /> object.</param>
+        /// <param name="actionStateFactory">The function that returns the value for the second arguments of the actions.</param>
+        /// <param name="actionNo">The optional alternative actions to invoke.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="actionYes" /> and/or <paramref name="actionStateFactory" /> is <see langword="null" />.
+        /// </exception>
+        protected void IfIList<TState>(Action<IList, TState> actionYes,
+                                       Func<NotifiableList<T>, TState> actionStateFactory,
+                                       Action<IList<T>, TState> actionNo = null)
+        {
+            if (actionYes == null)
+            {
+                throw new ArgumentNullException("funcYes");
+            }
+
+            if (actionStateFactory == null)
+            {
+                throw new ArgumentNullException("funcStateFactory");
+            }
+
+            this.IfIList(
+                funcYes: (list, state) =>
+                    {
+                        state.ActionYes(list, state.State);
+
+                        return (object)null;
+                    },
+                funcState: new
+                    {
+                        ActionNo = actionNo,
+                        ActionYes = actionYes,
+                        State = actionStateFactory(this),
+                    },
+                funcNo: (list, state) =>
+                    {
+                        if (state.ActionNo != null)
+                        {
+                            state.ActionNo(list, state.State);
+                        }
+
+                        return (object)null;
+                    });
+        }
+
+        /// <summary>
+        /// Invokes a function for <see cref="NotifiableCollection{T}.BaseCollection" /> if it is an <see cref="IList" /> object.
+        /// Otherwise an optional alternative function.
+        /// </summary>
+        /// <typeparam name="TResult">The result of the functions.</typeparam>
+        /// <param name="funcYes">The function to invoke if base collection is an <see cref="IList" /> object.</param>
+        /// <param name="funcNo">
+        /// The optional alternative function to invoke.
+        /// If not defined, a default logic is invoked that returns a default value.
+        /// </param>
+        /// <returns>The result of the matching function.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="funcYes" /> is <see langword="null" />.
+        /// </exception>
+        protected TResult IfIList<TResult>(Func<IList, TResult> funcYes,
+                                           Func<IList<T>, TResult> funcNo = null)
+        {
+            if (funcYes == null)
+            {
+                throw new ArgumentNullException("funcYes");
+            }
+
+            return this.IfIList(funcYes: (list, state) => state.FunctionYes(list),
+                                funcState: new
+                                    {
+                                        FunctionNo = funcNo,
+                                        FunctionYes = funcYes,
+                                    },
+                                 funcNo: (list, state) => state.FunctionNo != null ? state.FunctionNo(list)
+                                                                                   : default(TResult));
+        }
+
+        /// <summary>
+        /// Invokes a function for <see cref="NotifiableCollection{T}.BaseCollection" /> if it is an <see cref="IList" /> object.
+        /// Otherwise an optional alternative function.
+        /// </summary>
+        /// <typeparam name="TState">Type of the second arguments of the functions.</typeparam>
+        /// <typeparam name="TResult">The result of the functions.</typeparam>
+        /// <param name="funcYes">The function to invoke if base collection is an <see cref="IList" /> object.</param>
+        /// <param name="funcState">The value for the second arguments of the functions.</param>
+        /// <param name="funcNo">
+        /// The optional alternative function to invoke.
+        /// If not defined, a default logic is invoked that returns a default value.
+        /// </param>
+        /// <returns>The result of the matching function.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="funcYes" /> is <see langword="null" />.
+        /// </exception>
+        protected TResult IfIList<TState, TResult>(Func<IList, TState, TResult> funcYes,
+                                                   TState funcState,
+                                                   Func<IList<T>, TState, TResult> funcNo = null)
+        {
+            return this.IfIList<TState, TResult>(funcYes: funcYes,
+                                                 funcNo: funcNo,
+                                                 funcStateFactory: (coll) => funcState);
+        }
+
+        /// <summary>
+        /// Invokes a function for <see cref="NotifiableCollection{T}.BaseCollection" /> if it is an <see cref="IList" /> object.
+        /// Otherwise an optional alternative function.
+        /// </summary>
+        /// <typeparam name="TState">Type of the second arguments of the functions.</typeparam>
+        /// <typeparam name="TResult">The result of the functions.</typeparam>
+        /// <param name="funcYes">The function to invoke if base collection is an <see cref="IList" /> object.</param>
+        /// <param name="funcStateFactory">The function that returns the value for the second arguments of the functions.</param>
+        /// <param name="funcNo">
+        /// The optional alternative function to invoke.
+        /// If not defined, a default logic is invoked that returns a default value.
+        /// </param>
+        /// <returns>The result of the matching function.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="funcYes" /> and/or <paramref name="funcStateFactory" /> is <see langword="null" />.
+        /// </exception>
+        protected TResult IfIList<TState, TResult>(Func<IList, TState, TResult> funcYes,
+                                                   Func<NotifiableList<T>, TState> funcStateFactory,
+                                                   Func<IList<T>, TState, TResult> funcNo = null)
+        {
+            if (funcYes == null)
+            {
+                throw new ArgumentNullException("funcYes");
+            }
+
+            if (funcStateFactory == null)
+            {
+                throw new ArgumentNullException("funcStateFactory");
+            }
+
+            if (funcNo == null)
+            {
+                funcNo = (list, state) => default(TResult);
+            }
+
+            var funcState = funcStateFactory(this);
+
+            var iList = this.BaseCollection as IList;
+            if (iList != null)
+            {
+                return funcYes(iList, funcState);
+            }
+
+            return funcNo(this.BaseCollection, funcState);
+        }
+
+        /// <summary>
         /// <see cref="IList{T}.IndexOf(T)" />
         /// </summary>
         public int IndexOf(T item)
@@ -302,7 +534,13 @@ namespace MarcelJoachimKloubert.Collections
 
         int IList.IndexOf(object value)
         {
-            return this.IndexOf((T)value);
+            return this.IfIList(
+                (list, state) => list.IndexOf(state.Value),
+                new
+                {
+                    Value = value,
+                },
+                (list, state) => list.IndexOf((T)state.Value));
         }
 
         /// <summary>
@@ -343,12 +581,44 @@ namespace MarcelJoachimKloubert.Collections
 
         void IList.Insert(int index, object value)
         {
-            this.Insert(index, (T)value);
+            this.IfIList(
+                (list, state) =>
+                {
+                    var oldItem = this.TryGetOldItem(index);
+
+                    list.Insert(state.Index, state.Value);
+
+                    var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Move,
+                                                                 changedItem: oldItem,
+                                                                 index: state.Index + 1, oldIndex: state.Index);
+                    state.List.RaiseCollectionChanged(e);
+                },
+                new
+                {
+                    Index = index,
+                    List = this,
+                    Value = value,
+                },
+                (list, state) => list.Insert(state.Index, (T)state.Value));
         }
 
         void IList.Remove(object value)
         {
-            this.Remove((T)value);
+            this.IfIList(
+                (list, state) =>
+                {
+                    list.Remove(state.Value);
+
+                    var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Remove,
+                                                                 changedItem: state.Value);
+                    state.List.RaiseCollectionChanged(e);
+                },
+                new
+                {
+                    List = this,
+                    Value = value,
+                },
+                (list, state) => list.Remove((T)state.Value));
         }
 
         /// <summary>
@@ -387,6 +657,6 @@ namespace MarcelJoachimKloubert.Collections
             return result;
         }
 
-        #endregion Methods (16)
+        #endregion Methods (22)
     }
 }

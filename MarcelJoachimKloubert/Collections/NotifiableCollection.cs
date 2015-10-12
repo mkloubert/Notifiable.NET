@@ -116,7 +116,7 @@ namespace MarcelJoachimKloubert.Collections
 
         #endregion Events (1)
 
-        #region Properties (5)
+        #region Properties (6)
 
         /// <summary>
         /// Gets the base collection.
@@ -157,20 +157,29 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         public bool IsSynchronized
         {
+            get { return this.IfICollection((coll) => coll.IsSynchronized); }
+        }
+
+        /// <summary>
+        /// <see cref="ICollection.SyncRoot" />
+        /// </summary>
+        public override sealed object SyncRoot
+        {
             get
             {
-                if (this._BASE_COLLECTION is ICollection)
-                {
-                    return ((ICollection)this._BASE_COLLECTION).IsSynchronized;
-                }
-
-                return false;
+                return this.IfICollection(
+                    funcYes: (coll, state) => coll.SyncRoot,
+                    funcNo: (coll, state) => state.BaseSyncRoot,
+                    funcState: new
+                        {
+                            BaseSyncRoot = base.SyncRoot,
+                        }) ?? base.SyncRoot;
             }
         }
 
-        #endregion Properties (5)
+        #endregion Properties (6)
 
-        #region Methods (23)
+        #region Methods (29)
 
         /// <summary>
         /// <see cref="ICollection{T}.Add(T)" />
@@ -242,11 +251,24 @@ namespace MarcelJoachimKloubert.Collections
 
         void ICollection.CopyTo(Array array, int index)
         {
-            var srcArray = AsArray(this._BASE_COLLECTION);
+            this.IfICollection(
+                actionYes: (coll, state) =>
+                    {
+                        coll.CopyTo(state.Array, state.Index);
+                    },
+                actionNo: (coll, state) =>
+                    {
+                        var srcArray = AsArray(coll);
 
-            Array.Copy(sourceArray: srcArray, sourceIndex: 0,
-                       destinationArray: array, destinationIndex: index,
-                       length: srcArray.Length);
+                        Array.Copy(sourceArray: srcArray, sourceIndex: 0,
+                                   destinationArray: state.Array, destinationIndex: state.Index,
+                                   length: srcArray.Length);
+                    },
+                actionState: new
+                    {
+                        Array = array,
+                        Index = index,
+                    });
         }
 
         /// <summary>
@@ -434,6 +456,207 @@ namespace MarcelJoachimKloubert.Collections
         }
 
         /// <summary>
+        /// Invokes an action for <see cref="NotifiableCollection{T}.BaseCollection" /> if it is an <see cref="ICollection" /> object.
+        /// Otherwise an optional alternative action.
+        /// </summary>
+        /// <param name="actionYes">The function to invoke if base collection is an <see cref="ICollection" /> object.</param>
+        /// <param name="actionNo">The optional alternative actions to invoke.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="actionYes" /> is <see langword="null" />.
+        /// </exception>
+        protected void IfICollection(Action<ICollection> actionYes,
+                                     Action<ICollection<T>> actionNo = null)
+        {
+            if (actionYes == null)
+            {
+                throw new ArgumentNullException("funcYes");
+            }
+
+            this.IfICollection(actionYes: (coll, state) => state.ActionYes(coll),
+                               actionState: new
+                                   {
+                                       ActionNo = actionNo,
+                                       ActionYes = actionYes,
+                                   },
+                               actionNo: (coll, state) =>
+                                   {
+                                       state.ActionNo(coll);
+                                   });
+        }
+
+        /// <summary>
+        /// Invokes an action for <see cref="NotifiableCollection{T}.BaseCollection" /> if it is an <see cref="ICollection" /> object.
+        /// Otherwise an optional alternative action.
+        /// </summary>
+        /// <typeparam name="TState">Type of the second arguments of the actions.</typeparam>
+        /// <param name="actionYes">The function to invoke if base collection is an <see cref="ICollection" /> object.</param>
+        /// <param name="actionState">The value for the second arguments of the actions.</param>
+        /// <param name="actionNo">The optional alternative actions to invoke.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="actionYes" /> is <see langword="null" />.
+        /// </exception>
+        protected void IfICollection<TState>(Action<ICollection, TState> actionYes,
+                                             TState actionState,
+                                             Action<ICollection<T>, TState> actionNo = null)
+        {
+            this.IfICollection<TState>(actionYes: actionYes,
+                                       actionNo: actionNo,
+                                       actionStateFactory: (coll) => actionState);
+        }
+
+        /// <summary>
+        /// Invokes an action for <see cref="NotifiableCollection{T}.BaseCollection" /> if it is an <see cref="ICollection" /> object.
+        /// Otherwise an optional alternative action.
+        /// </summary>
+        /// <typeparam name="TState">Type of the second arguments of the actions.</typeparam>
+        /// <param name="actionYes">The function to invoke if base collection is an <see cref="ICollection" /> object.</param>
+        /// <param name="actionStateFactory">The function that returns the value for the second arguments of the actions.</param>
+        /// <param name="actionNo">The optional alternative actions to invoke.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="actionYes" /> and/or <paramref name="actionStateFactory" /> is <see langword="null" />.
+        /// </exception>
+        protected void IfICollection<TState>(Action<ICollection, TState> actionYes,
+                                             Func<NotifiableCollection<T>, TState> actionStateFactory,
+                                             Action<ICollection<T>, TState> actionNo = null)
+        {
+            if (actionYes == null)
+            {
+                throw new ArgumentNullException("funcYes");
+            }
+
+            if (actionStateFactory == null)
+            {
+                throw new ArgumentNullException("funcStateFactory");
+            }
+
+            this.IfICollection(
+                funcYes: (coll, state) =>
+                    {
+                        state.ActionYes(coll, state.State);
+
+                        return (object)null;
+                    },
+                funcState: new
+                    {
+                        ActionNo = actionNo,
+                        ActionYes = actionYes,
+                        State = actionStateFactory(this),
+                    },
+                funcNo: (coll, state) =>
+                    {
+                        if (state.ActionNo != null)
+                        {
+                            state.ActionNo(coll, state.State);
+                        }
+
+                        return (object)null;
+                    });
+        }
+
+        /// <summary>
+        /// Invokes a function for <see cref="NotifiableCollection{T}.BaseCollection" /> if it is an <see cref="ICollection" /> object.
+        /// Otherwise an optional alternative function.
+        /// </summary>
+        /// <typeparam name="TResult">The result of the functions.</typeparam>
+        /// <param name="funcYes">The function to invoke if base collection is an <see cref="ICollection" /> object.</param>
+        /// <param name="funcNo">
+        /// The optional alternative function to invoke.
+        /// If not defined, a default logic is invoked that returns a default value.
+        /// </param>
+        /// <returns>The result of the matching function.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="funcYes" /> is <see langword="null" />.
+        /// </exception>
+        protected TResult IfICollection<TResult>(Func<ICollection, TResult> funcYes,
+                                                 Func<ICollection<T>, TResult> funcNo = null)
+        {
+            if (funcYes == null)
+            {
+                throw new ArgumentNullException("funcYes");
+            }
+
+            return this.IfICollection(funcYes: (coll, state) => state.FunctionYes(coll),
+                                      funcState: new
+                                          {
+                                              FunctionNo = funcNo,
+                                              FunctionYes = funcYes,
+                                          },
+                                      funcNo: (coll, state) => state.FunctionNo != null ? state.FunctionNo(coll)
+                                                                                        : default(TResult));
+        }
+
+        /// <summary>
+        /// Invokes a function for <see cref="NotifiableCollection{T}.BaseCollection" /> if it is an <see cref="ICollection" /> object.
+        /// Otherwise an optional alternative function.
+        /// </summary>
+        /// <typeparam name="TState">Type of the second arguments of the functions.</typeparam>
+        /// <typeparam name="TResult">The result of the functions.</typeparam>
+        /// <param name="funcYes">The function to invoke if base collection is an <see cref="ICollection" /> object.</param>
+        /// <param name="funcState">The value for the second arguments of the functions.</param>
+        /// <param name="funcNo">
+        /// The optional alternative function to invoke.
+        /// If not defined, a default logic is invoked that returns a default value.
+        /// </param>
+        /// <returns>The result of the matching function.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="funcYes" /> is <see langword="null" />.
+        /// </exception>
+        protected TResult IfICollection<TState, TResult>(Func<ICollection, TState, TResult> funcYes,
+                                                         TState funcState,
+                                                         Func<ICollection<T>, TState, TResult> funcNo = null)
+        {
+            return this.IfICollection<TState, TResult>(funcYes: funcYes,
+                                                       funcNo: funcNo,
+                                                       funcStateFactory: (coll) => funcState);
+        }
+
+        /// <summary>
+        /// Invokes a function for <see cref="NotifiableCollection{T}.BaseCollection" /> if it is an <see cref="ICollection" /> object.
+        /// Otherwise an optional alternative function.
+        /// </summary>
+        /// <typeparam name="TState">Type of the second arguments of the functions.</typeparam>
+        /// <typeparam name="TResult">The result of the functions.</typeparam>
+        /// <param name="funcYes">The function to invoke if base collection is an <see cref="ICollection" /> object.</param>
+        /// <param name="funcStateFactory">The function that returns the value for the second arguments of the functions.</param>
+        /// <param name="funcNo">
+        /// The optional alternative function to invoke.
+        /// If not defined, a default logic is invoked that returns a default value.
+        /// </param>
+        /// <returns>The result of the matching function.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="funcYes" /> and/or <paramref name="funcStateFactory" /> is <see langword="null" />.
+        /// </exception>
+        protected TResult IfICollection<TState, TResult>(Func<ICollection, TState, TResult> funcYes,
+                                                         Func<NotifiableCollection<T>, TState> funcStateFactory,
+                                                         Func<ICollection<T>, TState, TResult> funcNo = null)
+        {
+            if (funcYes == null)
+            {
+                throw new ArgumentNullException("funcYes");
+            }
+
+            if (funcStateFactory == null)
+            {
+                throw new ArgumentNullException("funcStateFactory");
+            }
+
+            if (funcNo == null)
+            {
+                funcNo = (coll, state) => default(TResult);
+            }
+
+            var funcState = funcStateFactory(this);
+
+            var collection = this._BASE_COLLECTION as ICollection;
+            if (collection != null)
+            {
+                return funcYes(collection, funcState);
+            }
+
+            return funcNo(this._BASE_COLLECTION, funcState);
+        }
+
+        /// <summary>
         /// Initializes the value for <see cref="NotifiableCollection{T}.BaseCollection" /> property.
         /// </summary>
         /// <param name="items">The initial items (if defined).</param>
@@ -570,6 +793,6 @@ namespace MarcelJoachimKloubert.Collections
             return result;
         }
 
-        #endregion Methods (23)
+        #endregion Methods (29)
     }
 }

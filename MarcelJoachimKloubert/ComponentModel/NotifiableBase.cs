@@ -85,7 +85,7 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// <summary>
         /// Gets the object for thread safe operations.
         /// </summary>
-        public object SyncRoot
+        public virtual object SyncRoot
         {
             get { return this._SYNC_ROOT; }
         }
