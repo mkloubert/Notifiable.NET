@@ -142,19 +142,19 @@ namespace MarcelJoachimKloubert.Collections
             }
         }
 
+        object IDictionary.this[object key]
+        {
+            get { return this[(TKey)key]; }
+
+            set { this[(TKey)key] = (TValue)value; }
+        }
+
         /// <summary>
         /// <see cref="IDictionary{TKey, TValue}.Values" />
         /// </summary>
         public ICollection<TValue> Values
         {
             get { return this.BaseCollection.Values; }
-        }
-
-        object IDictionary.this[object key]
-        {
-            get { return this[(TKey)key]; }
-
-            set { this[(TKey)key] = (TValue)value; }
         }
 
         ICollection IDictionary.Values
