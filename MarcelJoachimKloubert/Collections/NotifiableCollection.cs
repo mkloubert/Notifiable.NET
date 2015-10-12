@@ -173,7 +173,7 @@ namespace MarcelJoachimKloubert.Collections
                     funcState: new
                         {
                             BaseSyncRoot = base.SyncRoot,
-                        });
+                        }) ?? base.SyncRoot;
             }
         }
 
