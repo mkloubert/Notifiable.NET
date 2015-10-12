@@ -250,15 +250,15 @@ namespace MarcelJoachimKloubert.ComponentModel
         protected TProperty Get<TProperty>(Expression<Func<TProperty>> expr)
         {
             bool found;
-            return this.Get(expr, out found);
+            return this.Get(out found, expr);
         }
 
         /// <summary>
         /// Returns the value of a property.
         /// </summary>
         /// <typeparam name="TProperty">Type of the property.</typeparam>
-        /// <param name="expr">The expression that contains the name of the property.</param>
         /// <param name="found">Stores if value exists / was found or not.</param>
+        /// <param name="expr">The expression that contains the name of the property.</param>
         /// <returns>The value.</returns>
         /// <exception cref="ArgumentException">
         /// Body of <paramref name="expr" /> is no <see cref="MemberExpression" />.
@@ -272,7 +272,7 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// <exception cref="MissingMemberException">
         /// Property was not found.
         /// </exception>
-        protected TProperty Get<TProperty>(Expression<Func<TProperty>> expr, out bool found)
+        protected TProperty Get<TProperty>(out bool found, Expression<Func<TProperty>> expr)
         {
             return this.Get<TProperty>(propertyName: GetPropertyName(expr),
                                        found: out found);
@@ -296,15 +296,16 @@ namespace MarcelJoachimKloubert.ComponentModel
         protected TProperty Get<TProperty>(IEnumerable<char> propertyName)
         {
             bool found;
-            return this.Get<TProperty>(propertyName, out found);
+            return this.Get<TProperty>(propertyName: propertyName,
+                                       found: out found);
         }
 
         /// <summary>
         /// Returns the value of a property.
         /// </summary>
         /// <typeparam name="TProperty">Type of the property.</typeparam>
-        /// <param name="propertyName">The name of the property.</param>
         /// <param name="found">Stores if value exists / was found or not.</param>
+        /// <param name="propertyName">The name of the property.</param>
         /// <returns>The value.</returns>
         /// <exception cref="ArgumentException">
         /// <paramref name="propertyName" /> is invalid.
@@ -315,7 +316,7 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// <exception cref="MissingMemberException">
         /// Property was not found.
         /// </exception>
-        protected TProperty Get<TProperty>(IEnumerable<char> propertyName, out bool found)
+        protected TProperty Get<TProperty>(out bool found, IEnumerable<char> propertyName)
         {
             var pn = this.NormalizePropertyName(propertyName);
 
