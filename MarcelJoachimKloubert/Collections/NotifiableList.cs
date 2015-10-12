@@ -39,7 +39,7 @@ namespace MarcelJoachimKloubert.Collections
     /// A notifiable list.
     /// </summary>
     /// <typeparam name="T">Type of the items.</typeparam>
-    public class NotifiableList<T> : NotifiableCollection<T>, IList<T>, IList
+    public class NotifiableList<T> : NotifiableCollection<T>, IList<T>, IList, IReadOnlyList<T>
     {
         #region Constructors (1)
 

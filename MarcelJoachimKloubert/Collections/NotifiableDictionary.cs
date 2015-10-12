@@ -40,7 +40,8 @@ namespace MarcelJoachimKloubert.Collections
     /// </summary>
     /// <typeparam name="TKey">Type of the keys.</typeparam>
     /// <typeparam name="TValue">Type of the values.</typeparam>
-    public class NotifiableDictionary<TKey, TValue> : NotifiableCollection<KeyValuePair<TKey, TValue>>, IDictionary<TKey, TValue>, IDictionary
+    public class NotifiableDictionary<TKey, TValue> : NotifiableCollection<KeyValuePair<TKey, TValue>>,
+                                                      IDictionary<TKey, TValue>, IDictionary, IReadOnlyDictionary<TKey, TValue>
     {
         #region Constructors (1)
 
@@ -60,7 +61,7 @@ namespace MarcelJoachimKloubert.Collections
 
         #endregion Constructors (1)
 
-        #region Properties (8)
+        #region Properties (10)
 
         /// <summary>
         /// <see cref="NotifiableCollection{T}.BaseCollection"/>
@@ -92,6 +93,11 @@ namespace MarcelJoachimKloubert.Collections
         public ICollection<TKey> Keys
         {
             get { return this.BaseCollection.Keys; }
+        }
+
+        IEnumerable<TKey> IReadOnlyDictionary<TKey, TValue>.Keys
+        {
+            get { return this.Keys; }
         }
 
         ICollection IDictionary.Keys
@@ -157,12 +163,17 @@ namespace MarcelJoachimKloubert.Collections
             set { this[(TKey)key] = (TValue)value; }
         }
 
+        IEnumerable<TValue> IReadOnlyDictionary<TKey, TValue>.Values
+        {
+            get { return this.Values; }
+        }
+
         ICollection IDictionary.Values
         {
             get { return AsCollection(this.Values); }
         }
 
-        #endregion Properties (8)
+        #endregion Properties (10)
 
         #region Methods (11)
 

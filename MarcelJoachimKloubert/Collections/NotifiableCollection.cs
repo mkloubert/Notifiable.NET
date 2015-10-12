@@ -42,7 +42,7 @@ namespace MarcelJoachimKloubert.Collections
     /// A notifiable collection.
     /// </summary>
     /// <typeparam name="T">Type of the items.</typeparam>
-    public class NotifiableCollection<T> : NotifiableBase, ICollection<T>, ICollection, INotifyCollectionChanged
+    public class NotifiableCollection<T> : NotifiableBase, ICollection<T>, ICollection, INotifyCollectionChanged, IReadOnlyCollection<T>
     {
         #region Fields (1)
 
