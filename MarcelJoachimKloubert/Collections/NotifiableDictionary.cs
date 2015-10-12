@@ -112,23 +112,6 @@ namespace MarcelJoachimKloubert.Collections
 
                 this.BaseCollection[key] = value;
 
-                // find zero based index of key
-                var keyComparer = this.GetPropertyValueEqualityComparer<TKey>("Item") ?? EqualityComparer<TKey>.Default;
-                var index = -1;
-                var i = -1;
-                foreach (var k in this.Keys)
-                {
-                    ++i;
-
-                    if (keyComparer.Equals(k, key))
-                    {
-                        // found
-
-                        index = i;
-                        break;
-                    }
-                }
-
                 var valueComparer = this.GetPropertyValueEqualityComparer<TValue>("Item") ?? EqualityComparer<TValue>.Default;
                 if (!valueComparer.Equals(oldValue, value))
                 {
@@ -137,7 +120,7 @@ namespace MarcelJoachimKloubert.Collections
                 }
 
                 var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Replace,
-                                                             newItem: value, oldItem: oldValue, index: index);
+                                                             newItem: value, oldItem: oldValue);
                 this.RaiseCollectionChanged(e);
             }
         }
