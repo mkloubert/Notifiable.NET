@@ -28,6 +28,7 @@
  **********************************************************************************************************************/
 
 using MarcelJoachimKloubert.ComponentModel;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -120,7 +121,7 @@ namespace MarcelJoachimKloubert.Collections
 
         #endregion Properties (3)
 
-        #region Methods (10)
+        #region Methods (16)
 
         int IList.Add(object value)
         {
@@ -131,6 +132,164 @@ namespace MarcelJoachimKloubert.Collections
         bool IList.Contains(object value)
         {
             return this.Contains((T)value);
+        }
+
+        /// <summary>
+        /// Invokes an action for this list while it is in edit mode.
+        /// In that mode change events have no effect.
+        /// </summary>
+        /// <param name="action">The action to invoke.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="action" /> is <see langword="null" />.
+        /// </exception>
+        public void EditList(Action<NotifiableList<T>> action)
+        {
+            if (action == null)
+            {
+                throw new ArgumentNullException("action");
+            }
+
+            this.EditList(action: (list, state) => state.Action(list),
+                          actionState: new
+                              {
+                                  Action = action,
+                              });
+        }
+
+        /// <summary>
+        /// Invokes an action for this list while it is in edit mode.
+        /// In that mode change events have no effect.
+        /// </summary>
+        /// <typeparam name="TState">Type of the second argument of <paramref name="action" />.</typeparam>
+        /// <param name="action">The action to invoke.</param>
+        /// <param name="actionState">The second argument for <paramref name="action" />.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="action" /> is <see langword="null" />.
+        /// </exception>
+        public void EditList<TState>(Action<NotifiableList<T>, TState> action, TState actionState)
+        {
+            this.EditList<TState>(action: action,
+                                  actionStateFactory: (list) => actionState);
+        }
+
+        /// <summary>
+        /// Invokes an action for this list while it is in edit mode.
+        /// In that mode change events have no effect.
+        /// </summary>
+        /// <typeparam name="TState">Type of the second argument of <paramref name="action" />.</typeparam>
+        /// <param name="action">The action to invoke.</param>
+        /// <param name="actionStateFactory">The function that returns the second argument for <paramref name="action" />.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="action" /> and/or <paramref name="actionStateFactory" /> is <see langword="null" />.
+        /// </exception>
+        public void EditList<TState>(Action<NotifiableList<T>, TState> action,
+                                     Func<NotifiableList<T>, TState> actionStateFactory)
+        {
+            if (action == null)
+            {
+                throw new ArgumentNullException("action");
+            }
+
+            if (actionStateFactory == null)
+            {
+                throw new ArgumentNullException("actionStateFactory");
+            }
+
+            this.EditList(
+                func: (list, state) =>
+                    {
+                        state.Action(list,
+                                     state.StateFactory(list));
+
+                        return (object)null;
+                    },
+                funcState: new
+                    {
+                        Action = action,
+                        StateFactory = actionStateFactory,
+                    });
+        }
+
+        /// <summary>
+        /// Invokes a function for this list while it is in edit mode.
+        /// In that mode change events have no effect.
+        /// </summary>
+        /// <typeparam name="TResult">Type of the result of <paramref name="func" />.</typeparam>
+        /// <param name="func">The function to invoke.</param>
+        /// <returns>The result of <paramref name="func" />.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="func" /> is <see langword="null" />.
+        /// </exception>
+        public TResult EditList<TResult>(Func<NotifiableList<T>, TResult> func)
+        {
+            if (func == null)
+            {
+                throw new ArgumentNullException("func");
+            }
+
+            return this.EditList(func: (list, state) => state.Function(list),
+                                 funcState: new
+                                     {
+                                         Function = func,
+                                     });
+        }
+
+        /// <summary>
+        /// Invokes a function for this list while it is in edit mode.
+        /// In that mode change events have no effect.
+        /// </summary>
+        /// <typeparam name="TState">Type of the second argument of <paramref name="func" />.</typeparam>
+        /// <typeparam name="TResult">Type of the result of <paramref name="func" />.</typeparam>
+        /// <param name="func">The function to invoke.</param>
+        /// <param name="funcState">The second argument for <paramref name="func" />.</param>
+        /// <returns>The result of <paramref name="func" />.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="func" /> is <see langword="null" />.
+        /// </exception>
+        public TResult EditList<TState, TResult>(Func<NotifiableList<T>, TState, TResult> func, TState funcState)
+        {
+            return this.EditList<TState, TResult>(func: func,
+                                                  funcStateFactory: (list) => funcState);
+        }
+
+        /// <summary>
+        /// Invokes a function for this list while it is in edit mode.
+        /// In that mode change events have no effect.
+        /// </summary>
+        /// <typeparam name="TState">Type of the second argument of <paramref name="func" />.</typeparam>
+        /// <typeparam name="TResult">Type of the result of <paramref name="func" />.</typeparam>
+        /// <param name="func">The function to invoke.</param>
+        /// <param name="funcStateFactory">The function that returns the second argument for <paramref name="func" />.</param>
+        /// <returns>The result of <paramref name="func" />.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="func" /> and/or <paramref name="funcStateFactory" /> is <see langword="null" />.
+        /// </exception>
+        public TResult EditList<TState, TResult>(Func<NotifiableList<T>, TState, TResult> func,
+                                                 Func<NotifiableList<T>, TState> funcStateFactory)
+        {
+            if (func == null)
+            {
+                throw new ArgumentNullException("func");
+            }
+
+            if (funcStateFactory == null)
+            {
+                throw new ArgumentNullException("funcStateFactory");
+            }
+
+            return this.EditCollection(
+                func: (coll, state) =>
+                    {
+                        var list = (NotifiableList<T>)coll;
+
+                        return state.Function(list,
+                                              state.StateFactory(list));
+                    },
+                funcState: new
+                    {
+                        Function = func,
+                        StateFactory = funcStateFactory,
+                    });
         }
 
         /// <summary>
@@ -228,6 +387,6 @@ namespace MarcelJoachimKloubert.Collections
             return result;
         }
 
-        #endregion Methods (10)
+        #endregion Methods (16)
     }
 }

@@ -116,7 +116,7 @@ namespace MarcelJoachimKloubert.Collections
 
         #endregion Events (1)
 
-        #region Properties (4)
+        #region Properties (5)
 
         /// <summary>
         /// Gets the base collection.
@@ -132,6 +132,16 @@ namespace MarcelJoachimKloubert.Collections
         public int Count
         {
             get { return this._BASE_COLLECTION.Count; }
+        }
+
+        /// <summary>
+        /// Gets if the collection is in edit mode or not.
+        /// </summary>
+        public bool IsEditing
+        {
+            get { return this.Get(() => this.IsEditing); }
+
+            private set { this.Set(value, () => this.IsEditing); }
         }
 
         /// <summary>
@@ -158,9 +168,9 @@ namespace MarcelJoachimKloubert.Collections
             }
         }
 
-        #endregion Properties (4)
+        #endregion Properties (5)
 
-        #region Methods (14)
+        #region Methods (23)
 
         /// <summary>
         /// <see cref="ICollection{T}.Add(T)" />
@@ -201,16 +211,15 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         public void Clear()
         {
-            var oldItems = this._BASE_COLLECTION.ToArray();
+            var oldCount = this._BASE_COLLECTION.Count;
 
             this._BASE_COLLECTION.Clear();
 
-            if (oldItems.Length != this._BASE_COLLECTION.Count)
+            if (oldCount != this._BASE_COLLECTION.Count)
             {
                 this.RaiseCollectionEvents();
 
-                var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Reset,
-                                                             changedItems: oldItems);
+                var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Reset);
                 this.RaiseCollectionChanged(e);
             }
         }
@@ -238,6 +247,177 @@ namespace MarcelJoachimKloubert.Collections
             Array.Copy(sourceArray: srcArray, sourceIndex: 0,
                        destinationArray: array, destinationIndex: index,
                        length: srcArray.Length);
+        }
+
+        /// <summary>
+        /// Invokes an action for this collection while it is in edit mode.
+        /// In that mode change events have no effect.
+        /// </summary>
+        /// <param name="action">The action to invoke.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="action" /> is <see langword="null" />.
+        /// </exception>
+        public void EditCollection(Action<NotifiableCollection<T>> action)
+        {
+            if (action == null)
+            {
+                throw new ArgumentNullException("action");
+            }
+
+            this.EditCollection(action: (coll, state) => state.Action(coll),
+                                actionState: new
+                                    {
+                                        Action = action,
+                                    });
+        }
+
+        /// <summary>
+        /// Invokes an action for this collection while it is in edit mode.
+        /// In that mode change events have no effect.
+        /// </summary>
+        /// <typeparam name="TState">Type of the second argument of <paramref name="action" />.</typeparam>
+        /// <param name="action">The action to invoke.</param>
+        /// <param name="actionState">The second argument for <paramref name="action" />.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="action" /> is <see langword="null" />.
+        /// </exception>
+        public void EditCollection<TState>(Action<NotifiableCollection<T>, TState> action, TState actionState)
+        {
+            this.EditCollection<TState>(action: action,
+                                        actionStateFactory: (coll) => actionState);
+        }
+
+        /// <summary>
+        /// Invokes an action for this collection while it is in edit mode.
+        /// In that mode change events have no effect.
+        /// </summary>
+        /// <typeparam name="TState">Type of the second argument of <paramref name="action" />.</typeparam>
+        /// <param name="action">The action to invoke.</param>
+        /// <param name="actionStateFactory">The function that returns the second argument for <paramref name="action" />.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="action" /> and/or <paramref name="actionStateFactory" /> is <see langword="null" />.
+        /// </exception>
+        public void EditCollection<TState>(Action<NotifiableCollection<T>, TState> action,
+                                           Func<NotifiableCollection<T>, TState> actionStateFactory)
+        {
+            if (action == null)
+            {
+                throw new ArgumentNullException("action");
+            }
+
+            if (actionStateFactory == null)
+            {
+                throw new ArgumentNullException("actionStateFactory");
+            }
+
+            this.EditCollection(
+                func: (coll, state) =>
+                    {
+                        state.Action(coll,
+                                     state.StateFactory(coll));
+
+                        return (object)null;
+                    },
+                funcState: new
+                    {
+                        Action = action,
+                        StateFactory = actionStateFactory,
+                    });
+        }
+
+        /// <summary>
+        /// Invokes a function for this collection while it is in edit mode.
+        /// In that mode change events have no effect.
+        /// </summary>
+        /// <typeparam name="TResult">Type of the result of <paramref name="func" />.</typeparam>
+        /// <param name="func">The function to invoke.</param>
+        /// <returns>The result of <paramref name="func" />.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="func" /> is <see langword="null" />.
+        /// </exception>
+        public TResult EditCollection<TResult>(Func<NotifiableCollection<T>, TResult> func)
+        {
+            if (func == null)
+            {
+                throw new ArgumentNullException("func");
+            }
+
+            return this.EditCollection(func: (coll, state) => state.Function(coll),
+                                       funcState: new
+                                           {
+                                               Function = func,
+                                           });
+        }
+
+        /// <summary>
+        /// Invokes a function for this collection while it is in edit mode.
+        /// In that mode change events have no effect.
+        /// </summary>
+        /// <typeparam name="TState">Type of the second argument of <paramref name="func" />.</typeparam>
+        /// <typeparam name="TResult">Type of the result of <paramref name="func" />.</typeparam>
+        /// <param name="func">The function to invoke.</param>
+        /// <param name="funcState">The second argument for <paramref name="func" />.</param>
+        /// <returns>The result of <paramref name="func" />.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="func" /> is <see langword="null" />.
+        /// </exception>
+        public TResult EditCollection<TState, TResult>(Func<NotifiableCollection<T>, TState, TResult> func, TState funcState)
+        {
+            return this.EditCollection<TState, TResult>(func: func,
+                                                        funcStateFactory: (coll) => funcState);
+        }
+
+        /// <summary>
+        /// Invokes a function for this collection while it is in edit mode.
+        /// In that mode change events have no effect.
+        /// </summary>
+        /// <typeparam name="TState">Type of the second argument of <paramref name="func" />.</typeparam>
+        /// <typeparam name="TResult">Type of the result of <paramref name="func" />.</typeparam>
+        /// <param name="func">The function to invoke.</param>
+        /// <param name="funcStateFactory">The function that returns the second argument for <paramref name="func" />.</param>
+        /// <returns>The result of <paramref name="func" />.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="func" /> and/or <paramref name="funcStateFactory" /> is <see langword="null" />.
+        /// </exception>
+        public TResult EditCollection<TState, TResult>(Func<NotifiableCollection<T>, TState, TResult> func,
+                                                       Func<NotifiableCollection<T>, TState> funcStateFactory)
+        {
+            if (func == null)
+            {
+                throw new ArgumentNullException("func");
+            }
+
+            if (funcStateFactory == null)
+            {
+                throw new ArgumentNullException("funcStateFactory");
+            }
+
+            var oldState = this.IsEditing;
+            try
+            {
+                this.IsEditing = true;
+
+                return func(this,
+                            funcStateFactory(this));
+            }
+            catch (Exception ex)
+            {
+                this.RaiseError(ex);
+
+                throw ex;
+            }
+            finally
+            {
+                this.IsEditing = oldState;
+
+                if (!oldState)
+                {
+                    this.RaiseCollectionEvents();
+
+                    var e = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset);
+                    this.RaiseCollectionChanged(e);
+                }
+            }
         }
 
         /// <summary>
@@ -295,18 +475,57 @@ namespace MarcelJoachimKloubert.Collections
         }
 
         /// <summary>
+        /// Is invoked when edit mode started.
+        /// </summary>
+        protected virtual void OnBeginEdit()
+        {
+        }
+
+        /// <summary>
+        /// Is invoked when edit mode has changed.
+        /// </summary>
+        /// <param name="args">The data with the new value.</param>
+        [ReceiveValueFrom("IsEditing")]
+        protected void OnEditModeChanged(IReceiveValueFromArgs args)
+        {
+            if (args.GetNewValue<bool>())
+            {
+                this.OnBeginEdit();
+            }
+            else
+            {
+                this.OnEndEdit();
+            }
+        }
+
+        /// <summary>
+        /// Is invoked when edit mode has ended.
+        /// </summary>
+        protected virtual void OnEndEdit()
+        {
+        }
+
+        /// <summary>
         /// Raises the <see cref="NotifiableCollection{T}.CollectionChanged" /> event.
         /// </summary>
         /// <param name="e">The argument for the event.</param>
-        /// <returns>Handler was raised or not.</returns>
+        /// <returns>
+        /// Handler was raised or not.
+        /// <see langword="null" /> indicates that collection is currently in edit mode.
+        /// </returns>
         /// <exception cref="ArgumentNullException">
         /// <paramref name="e" /> is <see langword="null" />.
         /// </exception>
-        protected bool RaiseCollectionChanged(NotifyCollectionChangedEventArgs e)
+        protected bool? RaiseCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
             if (e == null)
             {
                 throw new ArgumentNullException("e");
+            }
+
+            if (this.IsEditing)
+            {
+                return null;
             }
 
             var handler = this.CollectionChanged;
@@ -324,6 +543,11 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         protected virtual void RaiseCollectionEvents()
         {
+            if (this.IsEditing)
+            {
+                return;
+            }
+
             this.RaisePropertyChanged(() => this.Count);
         }
 
@@ -346,6 +570,6 @@ namespace MarcelJoachimKloubert.Collections
             return result;
         }
 
-        #endregion Methods (14)
+        #endregion Methods (23)
     }
 }

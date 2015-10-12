@@ -28,6 +28,7 @@
  **********************************************************************************************************************/
 
 using MarcelJoachimKloubert.ComponentModel;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -159,7 +160,7 @@ namespace MarcelJoachimKloubert.Collections
 
         #endregion Properties (10)
 
-        #region Methods (11)
+        #region Methods (17)
 
         /// <summary>
         /// <see cref="IDictionary{TKey, TValue}.Add(TKey, TValue)" />
@@ -190,6 +191,164 @@ namespace MarcelJoachimKloubert.Collections
         public bool ContainsKey(TKey key)
         {
             return this.BaseCollection.ContainsKey(key);
+        }
+
+        /// <summary>
+        /// Invokes an action for this dictionary while it is in edit mode.
+        /// In that mode change events have no effect.
+        /// </summary>
+        /// <param name="action">The action to invoke.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="action" /> is <see langword="null" />.
+        /// </exception>
+        public void EditDictionary(Action<NotifiableDictionary<TKey, TValue>> action)
+        {
+            if (action == null)
+            {
+                throw new ArgumentNullException("action");
+            }
+
+            this.EditDictionary(action: (dict, state) => state.Action(dict),
+                                actionState: new
+                                    {
+                                        Action = action,
+                                    });
+        }
+
+        /// <summary>
+        /// Invokes an action for this dictionary while it is in edit mode.
+        /// In that mode change events have no effect.
+        /// </summary>
+        /// <typeparam name="TState">Type of the second argument of <paramref name="action" />.</typeparam>
+        /// <param name="action">The action to invoke.</param>
+        /// <param name="actionState">The second argument for <paramref name="action" />.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="action" /> is <see langword="null" />.
+        /// </exception>
+        public void EditDictionary<TState>(Action<NotifiableDictionary<TKey, TValue>, TState> action, TState actionState)
+        {
+            this.EditDictionary<TState>(action: action,
+                                        actionStateFactory: (dict) => actionState);
+        }
+
+        /// <summary>
+        /// Invokes an action for this dictionary while it is in edit mode.
+        /// In that mode change events have no effect.
+        /// </summary>
+        /// <typeparam name="TState">Type of the second argument of <paramref name="action" />.</typeparam>
+        /// <param name="action">The action to invoke.</param>
+        /// <param name="actionStateFactory">The function that returns the second argument for <paramref name="action" />.</param>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="action" /> and/or <paramref name="actionStateFactory" /> is <see langword="null" />.
+        /// </exception>
+        public void EditDictionary<TState>(Action<NotifiableDictionary<TKey, TValue>, TState> action,
+                                           Func<NotifiableDictionary<TKey, TValue>, TState> actionStateFactory)
+        {
+            if (action == null)
+            {
+                throw new ArgumentNullException("action");
+            }
+
+            if (actionStateFactory == null)
+            {
+                throw new ArgumentNullException("actionStateFactory");
+            }
+
+            this.EditDictionary(
+                func: (dict, state) =>
+                    {
+                        state.Action(dict,
+                                     state.StateFactory(dict));
+
+                        return (object)null;
+                    },
+                funcState: new
+                    {
+                        Action = action,
+                        StateFactory = actionStateFactory,
+                    });
+        }
+
+        /// <summary>
+        /// Invokes a function for this dictionary while it is in edit mode.
+        /// In that mode change events have no effect.
+        /// </summary>
+        /// <typeparam name="TResult">Type of the result of <paramref name="func" />.</typeparam>
+        /// <param name="func">The function to invoke.</param>
+        /// <returns>The result of <paramref name="func" />.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="func" /> is <see langword="null" />.
+        /// </exception>
+        public TResult EditDictionary<TResult>(Func<NotifiableDictionary<TKey, TValue>, TResult> func)
+        {
+            if (func == null)
+            {
+                throw new ArgumentNullException("func");
+            }
+
+            return this.EditDictionary(func: (dict, state) => state.Function(dict),
+                                       funcState: new
+                                           {
+                                               Function = func,
+                                           });
+        }
+
+        /// <summary>
+        /// Invokes a function for this dictionary while it is in edit mode.
+        /// In that mode change events have no effect.
+        /// </summary>
+        /// <typeparam name="TState">Type of the second argument of <paramref name="func" />.</typeparam>
+        /// <typeparam name="TResult">Type of the result of <paramref name="func" />.</typeparam>
+        /// <param name="func">The function to invoke.</param>
+        /// <param name="funcState">The second argument for <paramref name="func" />.</param>
+        /// <returns>The result of <paramref name="func" />.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="func" /> is <see langword="null" />.
+        /// </exception>
+        public TResult EditDictionary<TState, TResult>(Func<NotifiableDictionary<TKey, TValue>, TState, TResult> func, TState funcState)
+        {
+            return this.EditDictionary<TState, TResult>(func: func,
+                                                        funcStateFactory: (dict) => funcState);
+        }
+
+        /// <summary>
+        /// Invokes a function for this dictionary while it is in edit mode.
+        /// In that mode change events have no effect.
+        /// </summary>
+        /// <typeparam name="TState">Type of the second argument of <paramref name="func" />.</typeparam>
+        /// <typeparam name="TResult">Type of the result of <paramref name="func" />.</typeparam>
+        /// <param name="func">The function to invoke.</param>
+        /// <param name="funcStateFactory">The function that returns the second argument for <paramref name="func" />.</param>
+        /// <returns>The result of <paramref name="func" />.</returns>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="func" /> and/or <paramref name="funcStateFactory" /> is <see langword="null" />.
+        /// </exception>
+        public TResult EditDictionary<TState, TResult>(Func<NotifiableDictionary<TKey, TValue>, TState, TResult> func,
+                                                       Func<NotifiableDictionary<TKey, TValue>, TState> funcStateFactory)
+        {
+            if (func == null)
+            {
+                throw new ArgumentNullException("func");
+            }
+
+            if (funcStateFactory == null)
+            {
+                throw new ArgumentNullException("funcStateFactory");
+            }
+
+            return this.EditCollection(
+                func: (coll, state) =>
+                    {
+                        var dict = (NotifiableDictionary<TKey, TValue>)coll;
+
+                        return state.Function(dict,
+                                              state.StateFactory(dict));
+                    },
+                funcState: new
+                    {
+                        Function = func,
+                        StateFactory = funcStateFactory,
+                    });
         }
 
         IDictionaryEnumerator IDictionary.GetEnumerator()
@@ -232,6 +391,11 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         protected override void RaiseCollectionEvents()
         {
+            if (this.IsEditing)
+            {
+                return;
+            }
+
             base.RaiseCollectionEvents();
 
             this.RaisePropertyChanged(() => this.Keys);
@@ -288,6 +452,6 @@ namespace MarcelJoachimKloubert.Collections
             return this.BaseCollection.TryGetValue(key, out value);
         }
 
-        #endregion Methods (11)
+        #endregion Methods (17)
     }
 }
