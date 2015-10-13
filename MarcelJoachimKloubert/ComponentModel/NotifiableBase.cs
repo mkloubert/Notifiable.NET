@@ -437,7 +437,7 @@ namespace MarcelJoachimKloubert.ComponentModel
                             })
                     .Select(x =>
                             {
-                                var attrib = x.Attributes.SingleOrDefault(y => (y.SenderName ?? string.Empty).Trim() != propertyName);
+                                var attrib = x.Attributes.SingleOrDefault(y => (y.SenderName ?? string.Empty).Trim() == propertyName);
                                 if (attrib == null)
                                 {
                                     // no do match
@@ -550,7 +550,7 @@ namespace MarcelJoachimKloubert.ComponentModel
                                 methodParams = new object[1];
 
                                 methodParams[0] = args;
-                                if (!@params[0].Equals(typeof(IReceiveValueFromArgs)))
+                                if (!@params[0].ParameterType.Equals(typeof(IReceiveValueFromArgs)))
                                 {
                                     // submit new value instead
                                     methodParams[0] = newValue;
