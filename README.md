@@ -6,9 +6,9 @@ Set of classes for easy and powerful implementation / use of [INotifyPropertyCha
 
 | Name  | Targets on  |
 | ----- | ----------- |
-| master (current)  | C# 4.0  |
+| [master](https://github.com/mkloubert/Notifiable.NET)  | C# 4.0  |
 | [CSharp5](https://github.com/mkloubert/Notifiable.NET/tree/CSharp5)  | C# 5.0  |
-| [Portable8](https://github.com/mkloubert/Notifiable.NET/tree/Portable8)  | C# 4.0, .NET 4.5, Silverlight 5, Windows 8, Windows Phone 8.1 + 8 (Silverlight)  |
+| Portable8 (current)  | C# 4.0, .NET 4.5, Silverlight 5, Windows 8, Windows Phone 8.1 + 8 (Silverlight)  |
 
 ## Install
 
@@ -118,4 +118,3 @@ class MyViewModel : NotifiableBase {
 In that example the `OnNameChanged()` method is invoked when the value of `Name` has been changed.
 
 After that a property changed event is raised for the `UpperName` property.
-
