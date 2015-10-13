@@ -1007,7 +1007,7 @@ namespace MarcelJoachimKloubert.ComponentModel
             var comparer = this.GetPropertyValueEqualityComparer<TProperty>(pn) ?? EqualityComparer<TProperty>.Default;
             var areDifferent = !comparer.Equals(oldValue, newValue);
 
-            if (!areDifferent)
+            if (areDifferent)
             {
                 AddOrSet(this._PROPERTIES, pn, newValue);
 
