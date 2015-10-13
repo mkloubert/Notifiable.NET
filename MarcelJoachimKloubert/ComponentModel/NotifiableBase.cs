@@ -1020,8 +1020,8 @@ namespace MarcelJoachimKloubert.ComponentModel
                 result = this.RaisePropertyChanged(pn) ? (bool?)true : null;
             }
 
-            this.HandleReceiveNotificationFromAttributes<TProperty>(pn, areDifferent);
             this.HandleReceiveValueFromAttributes<TProperty>(pn, oldValue, newValue, areDifferent);
+            this.HandleReceiveNotificationFromAttributes<TProperty>(pn, areDifferent);
 
             return result;
         }
