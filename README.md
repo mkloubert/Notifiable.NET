@@ -9,6 +9,14 @@ Set of classes for easy and powerful implementation / use of [INotifyPropertyCha
 | master (current)  | C# 4.0  |
 | [CSharp5](https://github.com/mkloubert/Notifiable.NET/tree/CSharp5)  | C# 5.0  |
 
+### nuget
+
+Visit [nuget site](https://www.nuget.org/packages/MarcelJoachimKloubert.Notifiable.dll) or enter the following command:
+
+```powershell
+Install-Package MarcelJoachimKloubert.Notifiable.dll
+```
+
 ## Notifiable objects
 
 The following example demonstrates how to implement a simple ViewModel object:
