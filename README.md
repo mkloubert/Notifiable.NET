@@ -6,8 +6,8 @@ Set of classes for easy and powerful implementation / use of [INotifyPropertyCha
 
 | Name  | Targets on  |
 | ----- | ----------- |
-| master (current)  | C# 4.0  |
-| [CSharp5](https://github.com/mkloubert/Notifiable.NET/tree/CSharp5)  | C# 5.0  |
+| [master](https://github.com/mkloubert/Notifiable.NET)  | C# 4.0  |
+| CSharp5 (current)  | C# 5.0  |
 
 ## Notifiable objects
 
@@ -21,9 +21,9 @@ using MarcelJoachimKloubert.ComponentModel;
 
 class MyViewModel : NotifiableBase {
     public object Value1 {
-        get { return this.Get(() => this.Value1); }
+        get { return this.Get<object>(); }
         
-        set { this.Set(value, () => this.Value1); }
+        set { this.Set(value); }
     }
 }
 
@@ -46,6 +46,8 @@ class Program {
 }
 ```
 
+In C# 5 / .NET 4.5 it is possible to use the [CallerMemberName](https://msdn.microsoft.com/en-us/library/system.runtime.compilerservices.callermembernameattribute%28v=vs.110%29.aspx) attribute which submits the name of a property automatically.
+
 ### Auto notification
 
 You can use the `ReceiveNotificationFrom` attribute if you want raise the `PropertyChanged` event for a property if the value of another property has been changed:
@@ -53,9 +55,9 @@ You can use the `ReceiveNotificationFrom` attribute if you want raise the `Prope
 ```csharp
 class MyViewModel : NotifiableBase {
     public string Name {
-        get { return this.Get(() => this.Name); }
+        get { return this.Get<string>(); }
         
-        set { this.Set(value, () => this.Name); }
+        set { this.Set(value); }
     }
     
     [ReceiveNotificationFrom("Name")]
@@ -82,9 +84,9 @@ class MyViewModel : NotifiableBase {
     private string _upperName;
 
     public string Name {
-        get { return this.Get(() => this.Name); }
+        get { return this.Get<string>(); }
         
-        set { this.Set(value, () => this.Name); }
+        set { this.Set(value); }
     }
     
     [ReceiveNotificationFrom("Name")]
