@@ -38,6 +38,6 @@ using System.Resources;
 [assembly: AssemblyCopyright("Copyright © 2015  Marcel Joachim Kloubert")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-[assembly: NeutralResourcesLanguage("de")]
+[assembly: NeutralResourcesLanguage("en")]
 [assembly: AssemblyVersion("1.0.0.1")]
 [assembly: AssemblyFileVersion("1.0.0.1")]
