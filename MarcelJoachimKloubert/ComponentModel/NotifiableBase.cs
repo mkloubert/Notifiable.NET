@@ -85,14 +85,14 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// <summary>
         /// Gets the object for thread safe operations.
         /// </summary>
-        public virtual object SyncRoot
+        public object SyncRoot
         {
             get { return this._SYNC_ROOT; }
         }
 
         #endregion Properties (1)
 
-        #region Methods (28)
+        #region Methods (31)
 
         /// <summary>
         /// Adds or sets a dictionary value.
@@ -197,6 +197,27 @@ namespace MarcelJoachimKloubert.ComponentModel
             return obj.ToString();
         }
 
+        private static bool CheckNotifictionAttributeOptions(ReceiveNotificationFromAttribute attrib, bool areDifferent)
+        {
+            if (areDifferent)
+            {
+                if (attrib.Options.HasFlag(ReceiveFromOptions.AreDifferent) ||
+                    (attrib.Options == ReceiveFromOptions.Default))
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                if (attrib.Options.HasFlag(ReceiveFromOptions.AreEqual))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// Converts a property value to a target type.
         /// </summary>
@@ -217,6 +238,11 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// <returns>The output value.</returns>
         protected virtual TTarget ConvertTo<TTarget>(object obj)
         {
+            if (DBNull.Value.Equals(obj))
+            {
+                obj = null;
+            }
+
             return (TTarget)obj;
         }
 
@@ -396,7 +422,7 @@ namespace MarcelJoachimKloubert.ComponentModel
             return ((_PropertyInfo)memberExpr.Member).Name;
         }
 
-        private void HandleReceiveNotificationFromAttributes<TProperty>(string propertyName)
+        private void HandleReceiveNotificationFromAttributes<TProperty>(string propertyName, bool areDifferent)
         {
             var propertiesToNotify =
                 this.GetType()
@@ -413,10 +439,15 @@ namespace MarcelJoachimKloubert.ComponentModel
                             })
                     .Select(x =>
                             {
-                                var attrib = x.Attributes.FirstOrDefault(y => (y.SenderName ?? string.Empty).Trim() != propertyName);
+                                var attrib = x.Attributes.SingleOrDefault(y => (y.SenderName ?? string.Empty).Trim() != propertyName);
                                 if (attrib == null)
                                 {
                                     // no do match
+                                    return null;
+                                }
+
+                                if (!CheckNotifictionAttributeOptions(attrib, areDifferent))
+                                {
                                     return null;
                                 }
 
@@ -435,6 +466,7 @@ namespace MarcelJoachimKloubert.ComponentModel
                     .Where(x => x != null);
 
             foreach (var property in propertiesToNotify.OrderBy(x => x.Attribute.SortOrder)
+                                                       .ThenBy(x => x.Property.Name, StringComparer.InvariantCulture)
                                                        .Select(x => x.Property.Name)
                                                        .Distinct(StringComparer.InvariantCulture))
             {
@@ -449,7 +481,7 @@ namespace MarcelJoachimKloubert.ComponentModel
             }
         }
 
-        private void HandleReceiveValueFromAttributes<TProperty>(string propertyName, TProperty oldValue, TProperty newValue)
+        private void HandleReceiveValueFromAttributes<TProperty>(string propertyName, TProperty oldValue, TProperty newValue, bool areDifferent)
         {
             var membersToNotify = new List<ReceiveValueFromArgs>();
 
@@ -470,6 +502,11 @@ namespace MarcelJoachimKloubert.ComponentModel
                         continue;
                     }
 
+                    if (!CheckNotifictionAttributeOptions(attrib, areDifferent))
+                    {
+                        continue;
+                    }
+
                     var args = new ReceiveValueFromArgs()
                     {
                         Attribute = attrib,
@@ -484,126 +521,125 @@ namespace MarcelJoachimKloubert.ComponentModel
             }
 
             // now invoke them in a specific order
-            foreach (var args in membersToNotify.OrderBy(x => x.Attribute.SortOrder))
+            foreach (var args in membersToNotify.OrderBy(x => x.Attribute.SortOrder)
+                                                .ThenBy(x => x.TargetMember.Name, StringComparer.InvariantCulture))
             {
-                if (args.TargetMember is _MethodInfo)
+                try
                 {
-                    var method = (_MethodInfo)args.TargetMember;
+                    object resultToHandle = null;
 
-                    object[] methodParams = null;
-
-                    var @params = method.GetParameters();
-                    if (@params.Length > 0)
+                    if (args.TargetMember is _MethodInfo)
                     {
-                        if (@params.Length > 2)
-                        {
-                            // submit sender name, old and new value
-                            methodParams = new object[] { args.SenderName, oldValue, newValue };
-                        }
-                        else if (@params.Length > 1)
-                        {
-                            // submit old and new value
-                            methodParams = new object[] { oldValue, newValue };
-                        }
-                        else
-                        {
-                            methodParams = new object[1];
+                        var method = (_MethodInfo)args.TargetMember;
 
-                            methodParams[0] = args;
-                            if (!@params[0].Equals(typeof(IReceiveValueFromArgs)))
+                        object[] methodParams = null;
+
+                        var @params = method.GetParameters();
+                        if (@params.Length > 0)
+                        {
+                            if (@params.Length > 2)
                             {
-                                // submit new value instead
-                                methodParams[0] = newValue;
+                                // submit sender name, old and new value
+                                methodParams = new object[] { args.SenderName, oldValue, newValue };
                             }
-                        }
-                    }
-
-                    try
-                    {
-                        method.Invoke(obj: this,
-                                      parameters: methodParams);
-                    }
-                    catch (Exception ex)
-                    {
-                        this.RaiseError(ex);
-                    }
-                }
-                else if (args.TargetMember is _PropertyInfo)
-                {
-                    var property = (_PropertyInfo)args.TargetMember;
-
-                    if (property.Name == propertyName)
-                    {
-                        // not allowed
-                        continue;
-                    }
-
-                    object propertyValue = args.NewValue;
-                    if (property.PropertyType.Equals(typeof(IReceiveValueFromArgs)))
-                    {
-                        // use argument object instead
-                        propertyValue = args;
-                    }
-
-                    object[] index = null;
-
-                    var indexParams = property.GetIndexParameters();
-                    if (indexParams.Length > 0)
-                    {
-                        if (indexParams.Length > 1)
-                        {
-                            // [Type][string]
-                            index = new object[] { typeof(TProperty), args.SenderName };
-                        }
-                        else
-                        {
-                            index = new object[1];
-
-                            if (indexParams[0].ParameterType.Equals(typeof(Type)) ||
-                                typeof(Type).IsSubclassOf(indexParams[0].ParameterType) ||
-                                typeof(Type).GetInterfaces().Any(x => x.Equals(indexParams[0].ParameterType)))
+                            else if (@params.Length > 1)
                             {
-                                // property type
-
-                                index[0] = typeof(TProperty);
+                                // submit old and new value
+                                methodParams = new object[] { oldValue, newValue };
                             }
                             else
                             {
-                                // sender name
-                                index[0] = args.SenderName;
+                                methodParams = new object[1];
+
+                                methodParams[0] = args;
+                                if (!@params[0].Equals(typeof(IReceiveValueFromArgs)))
+                                {
+                                    // submit new value instead
+                                    methodParams[0] = newValue;
+                                }
                             }
                         }
-                    }
 
-                    try
+                        resultToHandle = method.Invoke(obj: this,
+                                                       parameters: methodParams);
+                    }
+                    else if (args.TargetMember is _PropertyInfo)
                     {
+                        var property = (_PropertyInfo)args.TargetMember;
+
+                        if (property.Name == propertyName)
+                        {
+                            // not allowed
+                            continue;
+                        }
+
+                        object propertyValue = args.NewValue;
+                        if (property.PropertyType.Equals(typeof(IReceiveValueFromArgs)))
+                        {
+                            // use argument object instead
+                            propertyValue = args;
+                        }
+
+                        object[] index = null;
+
+                        var indexParams = property.GetIndexParameters();
+                        if (indexParams.Length > 0)
+                        {
+                            if (indexParams.Length > 1)
+                            {
+                                // [Type][string]
+                                index = new object[] { typeof(TProperty), args.SenderName };
+                            }
+                            else
+                            {
+                                index = new object[1];
+
+                                if (indexParams[0].ParameterType.Equals(typeof(Type)) ||
+                                    typeof(Type).IsSubclassOf(indexParams[0].ParameterType) ||
+                                    typeof(Type).GetInterfaces().Any(x => x.Equals(indexParams[0].ParameterType)))
+                                {
+                                    // property type
+
+                                    index[0] = typeof(TProperty);
+                                }
+                                else
+                                {
+                                    // sender name
+                                    index[0] = args.SenderName;
+                                }
+                            }
+                        }
+
                         property.SetValue(obj: this,
                                           value: propertyValue, index: index);
+
+                        resultToHandle = propertyValue;
                     }
-                    catch (Exception ex)
+                    else if (args.TargetMember is _FieldInfo)
                     {
-                        this.RaiseError(ex);
+                        var field = (_FieldInfo)args.TargetMember;
+
+                        object fieldValue = args.NewValue;
+                        if (field.FieldType.Equals(typeof(IReceiveValueFromArgs)))
+                        {
+                            // use argument object instead
+                            fieldValue = args;
+                        }
+
+                        field.SetValue(this, fieldValue);
+
+                        resultToHandle = fieldValue;
+                    }
+
+                    var resultHandler = args.ResultHandler;
+                    if (resultHandler != null)
+                    {
+                        resultHandler(args, resultToHandle);
                     }
                 }
-                else if (args.TargetMember is _FieldInfo)
+                catch (Exception ex)
                 {
-                    var field = (_FieldInfo)args.TargetMember;
-
-                    object fieldValue = args.NewValue;
-                    if (field.FieldType.Equals(typeof(IReceiveValueFromArgs)))
-                    {
-                        // use argument object instead
-                        fieldValue = args;
-                    }
-
-                    try
-                    {
-                        field.SetValue(this, fieldValue);
-                    }
-                    catch (Exception ex)
-                    {
-                        this.RaiseError(ex);
-                    }
+                    this.RaiseError(ex);
                 }
             }
         }
@@ -973,20 +1009,21 @@ namespace MarcelJoachimKloubert.ComponentModel
             TProperty oldValue = this.Get<TProperty>(pn);
 
             var comparer = this.GetPropertyValueEqualityComparer<TProperty>(pn) ?? EqualityComparer<TProperty>.Default;
+            var areDifferent = !comparer.Equals(oldValue, newValue);
 
-            if (!comparer.Equals(oldValue, newValue))
+            if (!areDifferent)
             {
                 AddOrSet(this._PROPERTIES, pn, newValue);
-
-                this.HandleReceiveNotificationFromAttributes<TProperty>(pn);
-                this.HandleReceiveValueFromAttributes<TProperty>(pn, oldValue, newValue);
 
                 return this.RaisePropertyChanged(pn) ? (bool?)true : null;
             }
 
+            this.HandleReceiveNotificationFromAttributes<TProperty>(pn, areDifferent);
+            this.HandleReceiveValueFromAttributes<TProperty>(pn, oldValue, newValue, areDifferent);
+
             return false;
         }
 
-        #endregion Methods (28)
+        #endregion Methods (31)
     }
 }

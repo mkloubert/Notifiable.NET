@@ -37,7 +37,7 @@ namespace MarcelJoachimKloubert.ComponentModel
     [AttributeUsage(AttributeTargets.Property,
                     AllowMultiple = true,
                     Inherited = false)]
-    public sealed class ReceiveNotificationFromAttribute : Attribute
+    public class ReceiveNotificationFromAttribute : Attribute
     {
         #region Constructors (1)
 
@@ -47,18 +47,31 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// <param name="senderName">
         /// The value for the <see cref="ReceiveNotificationFromAttribute.SenderName" /> property.
         /// </param>
-        /// <param name="sortOrder">
-        /// The value for the <see cref="ReceiveValueFromAttribute.SortOrder" /> property.
+        /// <param name="options">
+        /// The value for the <see cref="ReceiveNotificationFromAttribute.Options" /> property.
         /// </param>
-        public ReceiveNotificationFromAttribute(string senderName, int sortOrder = 0)
+        /// <param name="sortOrder">
+        /// The value for the <see cref="ReceiveNotificationFromAttribute.SortOrder" /> property.
+        /// </param>
+        public ReceiveNotificationFromAttribute(string senderName, ReceiveFromOptions options = ReceiveFromOptions.Default, int sortOrder = 0)
         {
+            this.Options = options;
             this.SenderName = senderName;
             this.SortOrder = sortOrder;
         }
 
         #endregion Constructors
 
-        #region Properties (2)
+        #region Properties (3)
+
+        /// <summary>
+        /// Gets or sets the options.
+        /// </summary>
+        public ReceiveFromOptions Options
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the name of sender / sending member of the notification.

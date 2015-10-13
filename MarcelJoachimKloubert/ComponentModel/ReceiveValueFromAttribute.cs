@@ -37,7 +37,7 @@ namespace MarcelJoachimKloubert.ComponentModel
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Method | AttributeTargets.Field,
                     AllowMultiple = true,
                     Inherited = false)]
-    public sealed class ReceiveValueFromAttribute : Attribute
+    public class ReceiveValueFromAttribute : ReceiveNotificationFromAttribute
     {
         #region Constructors (1)
 
@@ -45,39 +45,19 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// Initializes a new instance of the <see cref="ReceiveValueFromAttribute" /> class.
         /// </summary>
         /// <param name="senderName">
-        /// The value for the <see cref="ReceiveValueFromAttribute.SenderName" /> property.
+        /// The value for the <see cref="ReceiveNotificationFromAttribute.SenderName" /> property.
+        /// </param>
+        /// <param name="options">
+        /// The value for the <see cref="ReceiveNotificationFromAttribute.Options" /> property.
         /// </param>
         /// <param name="sortOrder">
-        /// The value for the <see cref="ReceiveValueFromAttribute.SortOrder" /> property.
+        /// The value for the <see cref="ReceiveNotificationFromAttribute.SortOrder" /> property.
         /// </param>
-        public ReceiveValueFromAttribute(string senderName, int sortOrder = 0)
+        public ReceiveValueFromAttribute(string senderName, ReceiveFromOptions options = ReceiveFromOptions.Default, int sortOrder = 0)
+            : base(senderName: senderName, options: options, sortOrder: sortOrder)
         {
-            this.SenderName = senderName;
-            this.SortOrder = sortOrder;
         }
 
         #endregion Constructors
-
-        #region Properties (2)
-
-        /// <summary>
-        /// Gets or sets the name of sender / sending member of the notification.
-        /// </summary>
-        public string SenderName
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// Gets or sets the sort order.
-        /// </summary>
-        public int SortOrder
-        {
-            get;
-            set;
-        }
-
-        #endregion Properties
     }
 }

@@ -36,7 +36,7 @@ namespace MarcelJoachimKloubert.ComponentModel
     /// </summary>
     public interface IReceiveValueFromArgs
     {
-        #region Data members (4)
+        #region Data members (5)
 
         /// <summary>
         /// The new value.
@@ -49,6 +49,11 @@ namespace MarcelJoachimKloubert.ComponentModel
         object OldValue { get; }
 
         /// <summary>
+        /// Gets or sets the optional action that should be invoked after a notification.
+        /// </summary>
+        Action<IReceiveValueFromArgs, object> ResultHandler { get; set; }
+
+        /// <summary>
         /// The name of the sending element / property.
         /// </summary>
         string SenderName { get; }
@@ -58,7 +63,7 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// </summary>
         Type TargetType { get; }
 
-        #endregion Data members (4)
+        #endregion Data members (5)
 
         #region Methods (2)
 
