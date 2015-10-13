@@ -99,17 +99,7 @@ namespace MarcelJoachimKloubert.Collections
         {
             get { return this[index]; }
 
-            set
-            {
-                this.IfIList(
-                    (list, state) => list[state.Index] = state.Value,
-                    new
-                    {
-                        Index = index,
-                        Value = value,
-                    },
-                    (list, state) => list[state.Index] = (T)state.Value);
-            }
+            set { this[index] = this.ConvertTo<T>(value); }
         }
 
         /// <summary>
@@ -131,38 +121,13 @@ namespace MarcelJoachimKloubert.Collections
 
         int IList.Add(object value)
         {
-            return this.IfIList(
-                (list, state) =>
-                {
-                    var result = list.Add(state.Value);
-
-                    var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Add,
-                                                                 changedItem: state.Value);
-                    state.List.RaiseCollectionChanged(e);
-
-                    return result;
-                },
-                new
-                {
-                    List = this,
-                    Value = value,
-                },
-                (list, state) =>
-                {
-                    state.List.Add((T)state.Value);
-                    return state.List.Count;
-                });
+            this.Add(this.ConvertTo<T>(value));
+            return this.Count - 1;
         }
 
         bool IList.Contains(object value)
         {
-            return this.IfIList(
-                (list, state) => list.Contains(state.Value),
-                new
-                {
-                    Value = value,
-                },
-                (list, state) => list.Contains((T)state.Value));
+            return this.Contains(this.ConvertTo<T>(value));
         }
 
         /// <summary>
@@ -534,13 +499,7 @@ namespace MarcelJoachimKloubert.Collections
 
         int IList.IndexOf(object value)
         {
-            return this.IfIList(
-                (list, state) => list.IndexOf(state.Value),
-                new
-                {
-                    Value = value,
-                },
-                (list, state) => list.IndexOf((T)state.Value));
+            return this.IndexOf(this.ConvertTo<T>(value));
         }
 
         /// <summary>
@@ -581,44 +540,13 @@ namespace MarcelJoachimKloubert.Collections
 
         void IList.Insert(int index, object value)
         {
-            this.IfIList(
-                (list, state) =>
-                {
-                    var oldItem = this.TryGetOldItem(index);
-
-                    list.Insert(state.Index, state.Value);
-
-                    var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Move,
-                                                                 changedItem: oldItem,
-                                                                 index: state.Index + 1, oldIndex: state.Index);
-                    state.List.RaiseCollectionChanged(e);
-                },
-                new
-                {
-                    Index = index,
-                    List = this,
-                    Value = value,
-                },
-                (list, state) => list.Insert(state.Index, (T)state.Value));
+            this.Insert(index,
+                        this.ConvertTo<T>(value));
         }
 
         void IList.Remove(object value)
         {
-            this.IfIList(
-                (list, state) =>
-                {
-                    list.Remove(state.Value);
-
-                    var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Remove,
-                                                                 changedItem: state.Value);
-                    state.List.RaiseCollectionChanged(e);
-                },
-                new
-                {
-                    List = this,
-                    Value = value,
-                },
-                (list, state) => list.Remove((T)state.Value));
+            this.Remove(this.ConvertTo<T>(value));
         }
 
         /// <summary>

@@ -116,7 +116,7 @@ namespace MarcelJoachimKloubert.Collections
 
         #endregion Events (1)
 
-        #region Properties (6)
+        #region Properties (5)
 
         /// <summary>
         /// Gets the base collection.
@@ -160,24 +160,7 @@ namespace MarcelJoachimKloubert.Collections
             get { return this.IfICollection((coll) => coll.IsSynchronized); }
         }
 
-        /// <summary>
-        /// <see cref="ICollection.SyncRoot" />
-        /// </summary>
-        public override sealed object SyncRoot
-        {
-            get
-            {
-                return this.IfICollection(
-                    funcYes: (coll, state) => coll.SyncRoot,
-                    funcNo: (coll, state) => state.BaseSyncRoot,
-                    funcState: new
-                        {
-                            BaseSyncRoot = base.SyncRoot,
-                        }) ?? base.SyncRoot;
-            }
-        }
-
-        #endregion Properties (6)
+        #endregion Properties (5)
 
         #region Methods (29)
 
@@ -251,24 +234,11 @@ namespace MarcelJoachimKloubert.Collections
 
         void ICollection.CopyTo(Array array, int index)
         {
-            this.IfICollection(
-                actionYes: (coll, state) =>
-                    {
-                        coll.CopyTo(state.Array, state.Index);
-                    },
-                actionNo: (coll, state) =>
-                    {
-                        var srcArray = AsArray(coll);
+            var srcArray = AsArray(this._BASE_COLLECTION);
 
-                        Array.Copy(sourceArray: srcArray, sourceIndex: 0,
-                                   destinationArray: state.Array, destinationIndex: state.Index,
-                                   length: srcArray.Length);
-                    },
-                actionState: new
-                    {
-                        Array = array,
-                        Index = index,
-                    });
+            Array.Copy(sourceArray: srcArray, sourceIndex: 0,
+                       destinationArray: array, destinationIndex: index,
+                       length: srcArray.Length);
         }
 
         /// <summary>

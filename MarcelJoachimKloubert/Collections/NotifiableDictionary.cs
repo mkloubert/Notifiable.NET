@@ -129,20 +129,9 @@ namespace MarcelJoachimKloubert.Collections
 
         object IDictionary.this[object key]
         {
-            get { return this[(TKey)key]; }
+            get { return this[this.ConvertTo<TKey>(key)]; }
 
-            set
-            {
-                this.IfIDictionary(
-                    (dict, state) => dict[state.Key] = state.Value,
-                    new
-
-                    {
-                        Key = key,
-                        Value = value,
-                    },
-                    (dict, state) => dict[(TKey)state.Key] = (TValue)state.Value);
-            }
+            set { this[this.ConvertTo<TKey>(key)] = this.ConvertTo<TValue>(value); }
         }
 
         /// <summary>
@@ -181,23 +170,13 @@ namespace MarcelJoachimKloubert.Collections
 
         void IDictionary.Add(object key, object value)
         {
-            this.IfIDictionary((dict, state) => dict.Add(state.Key, state.Value),
-                               new
-                               {
-                                   Key = key,
-                                   Value = value,
-                               },
-                               (dict, state) => dict.Add((TKey)state.Key, (TValue)state.Value));
+            this.Add(this.ConvertTo<TKey>(key),
+                     this.ConvertTo<TValue>(value));
         }
 
         bool IDictionary.Contains(object key)
         {
-            return this.IfIDictionary((dict, state) => dict.Contains(state.Key),
-                                      new
-                                      {
-                                          Key = key,
-                                      },
-                                      (dict, state) => dict.ContainsKey((TKey)state.Key));
+            return this.ContainsKey(this.ConvertTo<TKey>(key));
         }
 
         /// <summary>
@@ -637,26 +616,14 @@ namespace MarcelJoachimKloubert.Collections
 
         void IDictionary.Remove(object key)
         {
-            this.IfIDictionary((dict, state) => dict.Remove(state.Key),
-                               new
-                               {
-                                   Key = key,
-                               },
-                               (dict, state) => dict.Remove((TKey)state.Key));
+            this.Remove(this.ConvertTo<TKey>(key));
         }
 
         [DebuggerStepThrough]
         private TValue TryGetOldValue(TKey key)
         {
             TValue result;
-            try
-            {
-                result = this[key];
-            }
-            catch
-            {
-                result = default(TValue);
-            }
+            this.TryGetValue(key, out result);
 
             return result;
         }

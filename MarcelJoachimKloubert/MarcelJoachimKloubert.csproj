@@ -54,6 +54,7 @@
       <DependentUpon>NotifiableBase.cs</DependentUpon>
     </Compile>
     <Compile Include="ComponentModel\ReceiveNotificationFromAttribute.cs" />
+    <Compile Include="ComponentModel\ReceiveFromOptions.cs" />
     <Compile Include="ComponentModel\ReceiveValueFromAttribute.cs" />
     <Compile Include="DisposableBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

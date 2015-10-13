@@ -28,83 +28,28 @@
  **********************************************************************************************************************/
 
 using System;
-using System.Runtime.InteropServices;
 
 namespace MarcelJoachimKloubert.ComponentModel
 {
-    partial class NotifiableBase
+    /// <summary>
+    /// Options for <see cref="ReceiveNotificationFromAttribute" /> and <see cref="ReceiveValueFromAttribute" /> attributes.
+    /// </summary>
+    [Flags]
+    public enum ReceiveFromOptions
     {
-        private class ReceiveValueFromArgs : IReceiveValueFromArgs
-        {
-            #region Properties (8)
+        /// <summary>
+        /// Default
+        /// </summary>
+        Default = 0,
 
-            internal ReceiveValueFromAttribute Attribute
-            {
-                get;
-                set;
-            }
+        /// <summary>
+        /// Old and new values are NOT equal
+        /// </summary>
+        AreDifferent = 1,
 
-            public object NewValue
-            {
-                get;
-                internal set;
-            }
-
-            internal NotifiableBase NotifiableObject
-            {
-                get;
-                set;
-            }
-
-            public object OldValue
-            {
-                get;
-                internal set;
-            }
-
-            public Action<IReceiveValueFromArgs, object> ResultHandler
-            {
-                get;
-                set;
-            }
-
-            public string SenderName
-            {
-                get;
-                internal set;
-            }
-
-            internal _MemberInfo TargetMember
-            {
-                get;
-                set;
-            }
-
-            public Type TargetType
-            {
-                get;
-                internal set;
-            }
-
-            #endregion Properties (8)
-
-            #region Methods (2)
-
-            public TTarget GetNewValue<TTarget>()
-            {
-                return this.NotifiableObject
-                           .ConvertPropertyValue<TTarget>(propertyName: this.SenderName,
-                                                          obj: this.NewValue);
-            }
-
-            public TTarget GetOldValue<TTarget>()
-            {
-                return this.NotifiableObject
-                           .ConvertPropertyValue<TTarget>(propertyName: this.SenderName,
-                                                          obj: this.OldValue);
-            }
-
-            #endregion Methods (2)
-        }
+        /// <summary>
+        /// Old and new values are equal
+        /// </summary>
+        AreEqual = 2,
     }
 }
