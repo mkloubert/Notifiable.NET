@@ -54,9 +54,9 @@ namespace MarcelJoachimKloubert.Examples.Notifiable.WPF
 
         public string StringValue
         {
-            get { return this.Get(() => this.StringValue); }
+            get { return this.Get<string>(); }
 
-            set { this.Set(value, () => this.StringValue); }
+            set { this.Set(value); }
         }
 
         [ReceiveNotificationFrom("StringValue")]
@@ -68,7 +68,7 @@ namespace MarcelJoachimKloubert.Examples.Notifiable.WPF
         [ReceiveValueFrom("StringValue")]
         public string TrimmedAndUpperCase
         {
-            get { return this.Get(() => this.TrimmedAndUpperCase); }
+            get { return this.Get<string>(); }
 
             private set
             {
@@ -78,7 +78,7 @@ namespace MarcelJoachimKloubert.Examples.Notifiable.WPF
                     newValue = newValue.ToUpper().Trim();
                 }
 
-                this.Set(newValue, () => this.TrimmedAndUpperCase);
+                this.Set(newValue);
             }
         }
 
