@@ -1007,17 +1007,19 @@ namespace MarcelJoachimKloubert.ComponentModel
             var comparer = this.GetPropertyValueEqualityComparer<TProperty>(pn) ?? EqualityComparer<TProperty>.Default;
             var areDifferent = !comparer.Equals(oldValue, newValue);
 
+            bool? result = false;
+
             if (areDifferent)
             {
                 AddOrSet(this._PROPERTIES, pn, newValue);
 
-                return this.RaisePropertyChanged(pn) ? (bool?)true : null;
+                result = this.RaisePropertyChanged(pn) ? (bool?)true : null;
             }
 
             this.HandleReceiveNotificationFromAttributes<TProperty>(pn, areDifferent);
             this.HandleReceiveValueFromAttributes<TProperty>(pn, oldValue, newValue, areDifferent);
 
-            return false;
+            return result;
         }
 
         #endregion Methods (31)
