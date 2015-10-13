@@ -4,7 +4,7 @@ Set of classes for easy and powerful implementation of [INotifyPropertyChanged](
 
 ## Notifiable objects
 
-The following examples how to implement a simple ViewModel object:
+The following example demonstrates how to implement a simple ViewModel object:
 
 ### Basic usage
 
