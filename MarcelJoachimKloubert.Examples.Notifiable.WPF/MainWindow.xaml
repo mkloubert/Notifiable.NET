@@ -1,0 +1,87 @@
+﻿<Window x:Class="MarcelJoachimKloubert.Examples.Notifiable.WPF.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Notifiable.NET WPF examples" Height="487" Width="725" Loaded="Window_Loaded" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition />
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+
+        <TabControl Grid.Row="0" Grid.Column="0">
+            <TabItem Header="Simple example">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="64px" />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    
+                    <GroupBox Header="Input" Grid.Row="0" Grid.Column="0">
+                        <StackPanel Margin="8px">
+                            <TextBox Text="{Binding Path=StringValue, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                                     Height="24px" VerticalAlignment="Center"></TextBox>
+                        </StackPanel>
+                    </GroupBox>
+
+                    <GroupBox Header="Output" Grid.Row="1" Grid.Column="0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="32px" />
+                                <RowDefinition Height="32px" />
+                                <RowDefinition Height="32px" />
+                                <RowDefinition Height="32px" />
+                                <RowDefinition Height="32px" />
+                                <RowDefinition Height="32px" />
+                                <RowDefinition Height="32px" />
+                                <RowDefinition Height="32px" />
+                            </Grid.RowDefinitions>
+                            
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- UpperCase property -->
+                            <Label Grid.Row="0" Grid.Column="0"
+                                   FontWeight="Bold"
+                                   VerticalAlignment="Center">UpperCase property</Label>
+                            <TextBlock Grid.Row="1" Grid.Column="0"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding Path=UpperCase, Mode=OneWay}"></TextBlock>
+
+                            <!-- UpdateLowerCaseStringValue method -->
+                            <Label Grid.Row="2" Grid.Column="0"
+                                   FontWeight="Bold"
+                                   VerticalAlignment="Center">UpdateLowerCaseStringValue method</Label>
+                            <TextBlock Grid.Row="3" Grid.Column="0"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding Path=LowerCase, Mode=OneWay}"></TextBlock>
+
+                            <!-- TrimmedAndUpperCase property -->
+                            <Label Grid.Row="4" Grid.Column="0"
+                                   FontWeight="Bold"
+                                   VerticalAlignment="Center">TrimmedAndUpperCase property</Label>
+                            <TextBlock Grid.Row="5" Grid.Column="0"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding Path=TrimmedAndUpperCase, Mode=OneWay}"></TextBlock>
+
+                            <!-- _stringValue field -->
+                            <Label Grid.Row="6" Grid.Column="0"
+                                   FontWeight="Bold"
+                                   VerticalAlignment="Center">stringValue field</Label>
+                            <TextBlock Grid.Row="7" Grid.Column="0"
+                                       VerticalAlignment="Center"
+                                       Text="{Binding Path=StringValueField, Mode=OneWay}"></TextBlock>
+                        </Grid>
+                    </GroupBox>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>
