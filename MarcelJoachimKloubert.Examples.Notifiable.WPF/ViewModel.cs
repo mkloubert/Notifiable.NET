@@ -28,6 +28,8 @@
  **********************************************************************************************************************/
 
 using MarcelJoachimKloubert.ComponentModel;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace MarcelJoachimKloubert.Examples.Notifiable.WPF
 {
@@ -99,7 +101,12 @@ namespace MarcelJoachimKloubert.Examples.Notifiable.WPF
 
         #endregion Properties (5)
 
-        #region Methods (1)
+        #region Methods (2)
+
+        protected override IDictionary<string, object> CreatePropertyStorage()
+        {
+            return new ConcurrentDictionary<string, object>();
+        }
 
         [ReceiveValueFrom("StringValue")]
         protected void UpdateLowerCaseStringValue(IReceiveValueFromArgs args)
@@ -113,6 +120,6 @@ namespace MarcelJoachimKloubert.Examples.Notifiable.WPF
             this.LowerCase = val;
         }
 
-        #endregion Methods (1)
+        #endregion Methods (2)
     }
 }
