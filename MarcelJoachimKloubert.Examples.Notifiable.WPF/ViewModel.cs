@@ -41,9 +41,9 @@ namespace MarcelJoachimKloubert.Examples.Notifiable.WPF
         [ReceiveValueFrom("StringValue")]
         private string _stringValue;
 
-        #endregion
+        #endregion Fields (1)
 
-        #region Properties (3)
+        #region Properties (5)
 
         [ReceiveNotificationFrom("StringValue")]
         public string LowerCase
@@ -97,7 +97,7 @@ namespace MarcelJoachimKloubert.Examples.Notifiable.WPF
             }
         }
 
-        #endregion Properties (3)
+        #endregion Properties (5)
 
         #region Methods (1)
 
