@@ -31,7 +31,6 @@ using MarcelJoachimKloubert.ComponentModel;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
@@ -42,7 +41,7 @@ namespace MarcelJoachimKloubert.Collections
     /// A notifiable collection.
     /// </summary>
     /// <typeparam name="T">Type of the items.</typeparam>
-    public class NotifiableCollection<T> : NotifiableBase, ICollection<T>, ICollection, INotifyCollectionChanged
+    public class NotifiableCollection<T> : NotifiableBase, ICollection<T>, ICollection
     {
         #region Fields (1)
 
@@ -66,11 +65,6 @@ namespace MarcelJoachimKloubert.Collections
         {
             this._BASE_COLLECTION = this.InitBaseCollection(items) ?? new List<T>();
 
-            if (this._BASE_COLLECTION is INotifyCollectionChanged)
-            {
-                ((INotifyCollectionChanged)this._BASE_COLLECTION).CollectionChanged += this.NotifiableCollection_CollectionChanged;
-            }
-
             if (this._BASE_COLLECTION is INotifyPropertyChanged)
             {
                 ((INotifyPropertyChanged)this._BASE_COLLECTION).PropertyChanged += this.NotifiableCollection_PropertyChanged;
@@ -84,19 +78,9 @@ namespace MarcelJoachimKloubert.Collections
         {
             try
             {
-                try
+                if (this._BASE_COLLECTION is INotifyPropertyChanged)
                 {
-                    if (this._BASE_COLLECTION is INotifyCollectionChanged)
-                    {
-                        ((INotifyCollectionChanged)this._BASE_COLLECTION).CollectionChanged -= this.NotifiableCollection_CollectionChanged;
-                    }
-                }
-                finally
-                {
-                    if (this._BASE_COLLECTION is INotifyPropertyChanged)
-                    {
-                        ((INotifyPropertyChanged)this._BASE_COLLECTION).PropertyChanged -= this.NotifiableCollection_PropertyChanged;
-                    }
+                    ((INotifyPropertyChanged)this._BASE_COLLECTION).PropertyChanged -= this.NotifiableCollection_PropertyChanged;
                 }
             }
             catch
@@ -106,15 +90,6 @@ namespace MarcelJoachimKloubert.Collections
         }
 
         #endregion Constructors (2)
-
-        #region Events (1)
-
-        /// <summary>
-        /// <see cref="INotifyCollectionChanged.CollectionChanged" />
-        /// </summary>
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
-
-        #endregion Events (1)
 
         #region Properties (5)
 
@@ -162,7 +137,7 @@ namespace MarcelJoachimKloubert.Collections
 
         #endregion Properties (5)
 
-        #region Methods (29)
+        #region Methods (27)
 
         /// <summary>
         /// <see cref="ICollection{T}.Add(T)" />
@@ -171,10 +146,6 @@ namespace MarcelJoachimKloubert.Collections
         {
             this._BASE_COLLECTION.Add(item);
             this.RaiseCollectionEvents();
-
-            var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Add,
-                                                         changedItem: item);
-            this.RaiseCollectionChanged(e);
         }
 
         /// <summary>
@@ -210,9 +181,6 @@ namespace MarcelJoachimKloubert.Collections
             if (oldCount != this._BASE_COLLECTION.Count)
             {
                 this.RaiseCollectionEvents();
-
-                var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Reset);
-                this.RaiseCollectionChanged(e);
             }
         }
 
@@ -405,9 +373,6 @@ namespace MarcelJoachimKloubert.Collections
                 if (!oldState)
                 {
                     this.RaiseCollectionEvents();
-
-                    var e = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset);
-                    this.RaiseCollectionChanged(e);
                 }
             }
         }
@@ -648,11 +613,6 @@ namespace MarcelJoachimKloubert.Collections
             return result;
         }
 
-        private void NotifiableCollection_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            this.RaiseCollectionChanged(e);
-        }
-
         private void NotifiableCollection_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             var property = this.GetType()
@@ -699,39 +659,6 @@ namespace MarcelJoachimKloubert.Collections
         }
 
         /// <summary>
-        /// Raises the <see cref="NotifiableCollection{T}.CollectionChanged" /> event.
-        /// </summary>
-        /// <param name="e">The argument for the event.</param>
-        /// <returns>
-        /// Handler was raised or not.
-        /// <see langword="null" /> indicates that collection is currently in edit mode.
-        /// </returns>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="e" /> is <see langword="null" />.
-        /// </exception>
-        protected bool? RaiseCollectionChanged(NotifyCollectionChangedEventArgs e)
-        {
-            if (e == null)
-            {
-                throw new ArgumentNullException("e");
-            }
-
-            if (this.IsEditing)
-            {
-                return null;
-            }
-
-            var handler = this.CollectionChanged;
-            if (handler != null)
-            {
-                handler(this, e);
-                return true;
-            }
-
-            return false;
-        }
-
-        /// <summary>
         /// Raises all common collection events.
         /// </summary>
         protected virtual void RaiseCollectionEvents()
@@ -754,15 +681,11 @@ namespace MarcelJoachimKloubert.Collections
             if (result)
             {
                 this.RaiseCollectionEvents();
-
-                var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Remove,
-                                                             changedItem: item);
-                this.RaiseCollectionChanged(e);
             }
 
             return result;
         }
 
-        #endregion Methods (29)
+        #endregion Methods (27)
     }
 }

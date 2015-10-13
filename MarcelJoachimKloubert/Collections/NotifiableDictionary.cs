@@ -31,7 +31,6 @@ using MarcelJoachimKloubert.ComponentModel;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Diagnostics;
 
 namespace MarcelJoachimKloubert.Collections
@@ -120,10 +119,6 @@ namespace MarcelJoachimKloubert.Collections
                     this.RaisePropertyChanged("Item");
                     this.RaisePropertyChanged(() => this.Values);
                 }
-
-                var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Replace,
-                                                             newItem: value, oldItem: oldValue);
-                this.RaiseCollectionChanged(e);
             }
         }
 
@@ -162,10 +157,6 @@ namespace MarcelJoachimKloubert.Collections
         {
             this.BaseCollection.Add(key, value);
             this.RaiseCollectionEvents();
-
-            var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Add,
-                                                         changedItem: new KeyValuePair<TKey, TValue>(key, value));
-            this.RaiseCollectionChanged(e);
         }
 
         void IDictionary.Add(object key, object value)
@@ -605,10 +596,6 @@ namespace MarcelJoachimKloubert.Collections
             if (result)
             {
                 this.RaiseCollectionEvents();
-
-                var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Remove,
-                                                             changedItem: oldValue);
-                this.RaiseCollectionChanged(e);
             }
 
             return result;

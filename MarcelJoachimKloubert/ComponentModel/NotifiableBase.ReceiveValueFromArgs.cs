@@ -28,7 +28,7 @@
  **********************************************************************************************************************/
 
 using System;
-using System.Runtime.InteropServices;
+using System.Reflection;
 
 namespace MarcelJoachimKloubert.ComponentModel
 {
@@ -74,7 +74,7 @@ namespace MarcelJoachimKloubert.ComponentModel
                 internal set;
             }
 
-            internal _MemberInfo TargetMember
+            internal MemberInfo TargetMember
             {
                 get;
                 set;

@@ -31,7 +31,6 @@ using MarcelJoachimKloubert.ComponentModel;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Diagnostics;
 
 namespace MarcelJoachimKloubert.Collections
@@ -88,10 +87,6 @@ namespace MarcelJoachimKloubert.Collections
                 {
                     this.RaisePropertyChanged("Item");
                 }
-
-                var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Replace,
-                                                             newItem: value, oldItem: oldItem, index: index);
-                this.RaiseCollectionChanged(e);
             }
         }
 
@@ -531,11 +526,6 @@ namespace MarcelJoachimKloubert.Collections
 
             this.BaseCollection.Insert(index, item);
             this.RaiseCollectionEvents();
-
-            var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Move,
-                                                         changedItem: oldItem,
-                                                         index: index + 1, oldIndex: index);
-            this.RaiseCollectionChanged(e);
         }
 
         void IList.Insert(int index, object value)
@@ -562,10 +552,6 @@ namespace MarcelJoachimKloubert.Collections
             if (oldCount != this.Count)
             {
                 this.RaiseCollectionEvents();
-
-                var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Remove,
-                                                         changedItem: oldItem, index: index);
-                this.RaiseCollectionChanged(e);
             }
         }
 
