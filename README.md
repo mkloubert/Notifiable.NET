@@ -6,7 +6,7 @@ Set of classes for easy and powerful implementation / use of [INotifyPropertyCha
 
 | Name  | Targets on  |
 | ----- | ----------- |
-| [master](https://github.com/mkloubert/Notifiable.NET)  | C# 4.0  |
+| [master (current)](https://github.com/mkloubert/Notifiable.NET)  | C# 4.0  |
 | [CSharp5](https://github.com/mkloubert/Notifiable.NET/tree/CSharp5)  | C# 5.0  |
 
 ## Notifiable objects
