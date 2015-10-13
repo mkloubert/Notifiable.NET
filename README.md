@@ -1,6 +1,13 @@
-# Notifiable.NET (C# 4.0)
+# Notifiable.NET
 
 Set of classes for easy and powerful implementation / use of [INotifyPropertyChanged](https://msdn.microsoft.com/en-us/library/system.componentmodel.inotifypropertychanged%28v=vs.110%29.aspx) and [INotifyCollectionChanged](https://msdn.microsoft.com/en-us/library/system.collections.specialized.inotifycollectionchanged%28v=vs.110%29.aspx) based objects.
+
+## Branches
+
+| Name  | Targets on  |
+| ----- | ----------- |
+| [master](https://github.com/mkloubert/Notifiable.NET)  | C# 4.0  |
+| [CSharp5](https://github.com/mkloubert/Notifiable.NET/tree/CSharp5)  | C# 5.0  |
 
 ## Notifiable objects
 
