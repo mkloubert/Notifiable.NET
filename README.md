@@ -115,7 +115,7 @@ The `NotifiableBase` class uses an [IDictionary&lt;string, object&gt;](https://m
 
 By default a [Dictionary&lt;string, object&gt;](https://msdn.microsoft.com/en-us/library/xfhwa508%28v=vs.110%29.aspx) instance is created.
 
-The problem, that this class is NOT thread safe!
+The problem is, that this class is NOT thread safe!
 
 Now you have two options:
 
