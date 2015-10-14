@@ -137,11 +137,11 @@ The first (and not recommed) one is to use the `InvokeThreadSafe()` method:
 class MyViewModel : NotifiableBase {
     public string Name {
         get {
-            return this.InvokeThreadSafe(func: (obj) => this.Get(() => this.Name));
+            return this.InvokeThreadSafe(func: (obj) => this.Get<string>());
         }
         
         set {
-            this.InvokeThreadSafe(action: (obj, state) => this.Set(state, () => this.Name),
+            this.InvokeThreadSafe(action: (obj, state) => this.Set(state),
                                   actionState: value);
         }
     }
@@ -168,9 +168,9 @@ class MyViewModel : NotifiableBase {
     
     
     public string Name {
-        get { return this.Get(() => this.Name); }
+        get { return this.Get<string>(); }
         
-        set { this.Set(value, () => this.Name); }
+        set { this.Set(value); }
     }
 }
 ```
