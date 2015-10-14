@@ -119,3 +119,58 @@ In that example the `OnNameChanged()` method is invoked when the value of `Name`
 
 After that a property changed event is raised for the `UpperName` property.
 
+### Work thread safe
+
+The `NotifiableBase` class uses an [IDictionary&lt;string, object&gt;](https://msdn.microsoft.com/en-us/library/s4ys34ea(v=vs.110).aspx) instance to store the properties and theirs values.
+
+By default a [Dictionary&lt;string, object&gt;](https://msdn.microsoft.com/en-us/library/xfhwa508%28v=vs.110%29.aspx) instance is created.
+
+The problem, that this class is NOT thread safe!
+
+Now you have two options:
+
+The first (and not recommed) one is to use the `InvokeThreadSafe()` method:
+
+```csharp
+class MyViewModel : NotifiableBase {
+    public string Name {
+        get {
+            return this.InvokeThreadSafe(func: (obj) => this.Get(() => this.Name));
+        }
+        
+        set {
+            this.InvokeThreadSafe(action: (obj, state) => this.Set(state, () => this.Name),
+                                  actionState: value);
+        }
+    }
+}
+```
+
+The method uses the object from `SyncRoot` property for the internal used [lock](https://msdn.microsoft.com/en-us/library/vstudio/c5kehkcz%28v=vs.100%29.aspx) statement.
+
+The problem is that you have to do this for all notifiable properties!
+
+The seond and BETTER WAY is to initialize an own instance of the property storage.
+
+Overwrite the `CreatePropertyStorage()` method and return an instance of a thread safe dictionary, like [ConcurrentDictionary](https://msdn.microsoft.com/en-us/library/dd287191%28v=vs.110%29.aspx) (or an own one):
+
+```csharp
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using MarcelJoachimKloubert.ComponentModel;
+
+class MyViewModel : NotifiableBase {
+    protected override IDictionary<string, object> CreatePropertyStorage() {
+        return new ConcurrentDictionary<string, object>();
+    }
+    
+    
+    public string Name {
+        get { return this.Get(() => this.Name); }
+        
+        set { this.Set(value, () => this.Name); }
+    }
+}
+```
+
+And this is something that is done once in the constructor of the `NotifiableBase` class.
