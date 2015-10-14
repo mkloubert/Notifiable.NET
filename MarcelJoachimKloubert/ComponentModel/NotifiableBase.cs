@@ -38,7 +38,7 @@ using System.Reflection;
 namespace MarcelJoachimKloubert.ComponentModel
 {
     /// <summary>
-    /// A basic thread safe notifiable object.
+    /// A basic notifiable object.
     /// </summary>
     public abstract partial class NotifiableBase : INotifyPropertyChanged
     {
