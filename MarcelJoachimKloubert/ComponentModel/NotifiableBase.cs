@@ -40,7 +40,7 @@ using System.Runtime.InteropServices;
 namespace MarcelJoachimKloubert.ComponentModel
 {
     /// <summary>
-    /// A basic thread safe notifiable object.
+    /// A basic notifiable object.
     /// </summary>
     public abstract partial class NotifiableBase : MarshalByRefObject, INotifyPropertyChanged
     {
