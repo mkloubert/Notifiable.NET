@@ -125,10 +125,10 @@
     <Compile Include="ComponentModel\ReceiveNotificationFromAttribute.cs" />
     <Compile Include="ComponentModel\ReceiveValueFromAttribute.cs" />
     <Compile Include="DisposableBase.cs" />
-    <Compile Include="Extensions\IPropertyChangeContext.cs" />
+    <Compile Include="Extensions\IPropertyChangedContext.cs" />
     <Compile Include="Extensions\PropertyChange.cs" />
     <Compile Include="Extensions\PropertyChange.RegisterForPropertyChanged.cs" />
-    <Compile Include="Extensions\PropertyChangeContext.cs" />
+    <Compile Include="Extensions\PropertyChangedContext.cs" />
     <Compile Include="Extensions\_Extensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Content Include="Properties\MarcelJoachimKloubert.rd.xml" />
