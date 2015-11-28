@@ -29,63 +29,102 @@
 
 using System;
 using System.ComponentModel;
+using System.Reflection;
 
 namespace MarcelJoachimKloubert.Extensions
 {
-    #region INTERFACE: IPropertyChangeContext<out TObj>
-
-    /// <summary>
-    /// Describes a context for an <see cref="INotifyPropertyChanged" /> object.
-    /// </summary>
-    /// <typeparam name="TObj">Type of the object.</typeparam>
-    public interface IPropertyChangeContext<out TObj> : IDisposable
+    internal class PropertyChangedContext<TObj, TProperty> : IPropertyChangedContext<TObj, TProperty>
         where TObj : global::System.ComponentModel.INotifyPropertyChanged
     {
-        #region Properties (2)
+        #region Fields (1)
 
-        /// <summary>
-        /// Gets the underlying object.
-        /// </summary>
-        TObj Object { get; }
+        private PropertyChangedEventHandler _handler;
 
-        /// <summary>
-        /// Gets the value of the property.
-        /// </summary>
-        object Value { get; }
+        #endregion Fields (1)
 
-        #endregion Properties (2)
+        #region Constructors (1)
 
-        #region Methods (1)
+        ~PropertyChangedContext()
+        {
+            Dispose(false);
+        }
 
-        /// <summary>
-        /// Unregisters the underlying action.
-        /// </summary>
-        void Unregister();
+        #endregion Constructors (1)
 
-        #endregion Methods (1)
+        #region Properties (6)
+
+        internal Action<IPropertyChangedContext<TObj, TProperty>> Action
+        {
+            set
+            {
+                var oldHandler = _handler;
+                if (oldHandler != null)
+                {
+                    Object.PropertyChanged -= oldHandler;
+                }
+
+                var newHandler = value != null ? new PropertyChangedEventHandler((sender, e) =>
+                    {
+                        value(this);
+                    }) : null;
+
+                _handler = null;
+                if (newHandler != null)
+                {
+                    Object.PropertyChanged += _handler = newHandler;
+                }
+            }
+        }
+
+        public TObj Object { get; internal set; }
+
+        internal PropertyInfo Property { get; set; }
+
+        string IPropertyChangedContext<TObj>.Property
+        {
+            get { return Property.Name; }
+        }
+
+        public TProperty Value
+        {
+            get { return (TProperty)Property.GetValue(Object, null); }
+        }
+
+        object IPropertyChangedContext<TObj>.Value
+        {
+            get { return Value; }
+        }
+
+        #endregion Properties (6)
+
+        #region Methods (3)
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        private void Dispose(bool disposing)
+        {
+            try
+            {
+                Unregister();
+            }
+            catch
+            {
+                if (disposing)
+                {
+                    throw;
+                }
+            }
+        }
+
+        public void Unregister()
+        {
+            Action = null;
+        }
+
+        #endregion Methods (3)
     }
-
-    #endregion INTERFACE: IPropertyChangeContext<out TObj>
-
-    #region INTERFACE: IPropertyChangeContext<out TObj, TProperty>
-
-    /// <summary>
-    /// Describes a context for an <see cref="INotifyPropertyChanged" /> object.
-    /// </summary>
-    /// <typeparam name="TObj">Type of the object.</typeparam>
-    /// <typeparam name="TProperty">Type of the property.</typeparam>
-    public interface IPropertyChangeContext<out TObj, TProperty> : IPropertyChangeContext<TObj>
-        where TObj : global::System.ComponentModel.INotifyPropertyChanged
-    {
-        #region Properties (1)
-
-        /// <summary>
-        /// Gets or sets the value of the property.
-        /// </summary>
-        new TProperty Value { get; }
-
-        #endregion Properties (1)
-    }
-
-    #endregion INTERFACE: IPropertyChangeContext<out TObj, TProperty>
 }
