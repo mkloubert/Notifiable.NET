@@ -28,6 +28,7 @@
  **********************************************************************************************************************/
 
 using System.Windows;
+using MarcelJoachimKloubert.Extensions;
 
 namespace MarcelJoachimKloubert.Examples.Notifiable.WPF
 {
@@ -43,7 +44,7 @@ namespace MarcelJoachimKloubert.Examples.Notifiable.WPF
         /// </summary>
         public MainWindow()
         {
-            this.InitializeComponent();
+            InitializeComponent();
         }
 
         #endregion Constructors (1)
@@ -52,10 +53,20 @@ namespace MarcelJoachimKloubert.Examples.Notifiable.WPF
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            this.DataContext = new ViewModel()
+            var vm = new ViewModel()
                 {
                     StringValue = "Change this to see effects...",
                 };
+
+            vm.RegisterForPropertyChanged((ctx) =>
+                {
+                    if (ctx.Value != null)
+                    {
+                        
+                    }
+                }, (v) => v.StringValue);
+
+            DataContext = vm;
         }
 
         #endregion

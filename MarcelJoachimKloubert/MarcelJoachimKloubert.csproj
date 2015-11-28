@@ -57,6 +57,13 @@
     <Compile Include="ComponentModel\ReceiveFromOptions.cs" />
     <Compile Include="ComponentModel\ReceiveValueFromAttribute.cs" />
     <Compile Include="DisposableBase.cs" />
+    <Compile Include="Extensions\PropertyChange.cs" />
+    <Compile Include="Extensions\PropertyChange.RegisterForPropertyChanged.cs">
+      <DependentUpon>PropertyChange.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Extensions\IPropertyChangeContext.cs" />
+    <Compile Include="Extensions\PropertyChangeContext.cs" />
+    <Compile Include="Extensions\_Extensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
