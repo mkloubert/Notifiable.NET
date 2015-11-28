@@ -56,6 +56,13 @@
     <Compile Include="ComponentModel\ReceiveFromOptions.cs" />
     <Compile Include="ComponentModel\ReceiveNotificationFromAttribute.cs" />
     <Compile Include="ComponentModel\ReceiveValueFromAttribute.cs" />
+    <Compile Include="Extensions\IPropertyChangeContext.cs" />
+    <Compile Include="Extensions\PropertyChange.cs" />
+    <Compile Include="Extensions\PropertyChange.RegisterForPropertyChanged.cs">
+      <DependentUpon>PropertyChange.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Extensions\PropertyChangeContext.cs" />
+    <Compile Include="Extensions\_Extensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />

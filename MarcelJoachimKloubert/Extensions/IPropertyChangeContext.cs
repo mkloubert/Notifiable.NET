@@ -1,5 +1,5 @@
-/**********************************************************************************************************************
- * Notifiable.NET (https://github.com/mkloubert/Notifiable.NET)                                                       *
+﻿/**********************************************************************************************************************
+ * Extensions.NET (https://github.com/mkloubert/Extensions.NET)                                                       *
  *                                                                                                                    *
  * Copyright (c) 2015, Marcel Joachim Kloubert <marcel.kloubert@gmx.net>                                              *
  * All rights reserved.                                                                                               *
@@ -27,19 +27,65 @@
  *                                                                                                                    *
  **********************************************************************************************************************/
 
-using System.Reflection;
-using System.Resources;
+using System;
+using System.ComponentModel;
 
-[assembly: AssemblyTitle("Notifiable.NET")]
-[assembly: AssemblyDescription("Class library with implementations for INotifyPropertyChanged and INotifyCollectionChanged interfaces.")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Marcel Joachim Kloubert")]
-[assembly: AssemblyProduct("Notifiable.NET")]
-[assembly: AssemblyCopyright("Copyright © 2015  Marcel Joachim Kloubert")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
+namespace MarcelJoachimKloubert.Extensions
+{
+    #region INTERFACE: IPropertyChangeContext<out TObj>
 
-[assembly: NeutralResourcesLanguage("en")]
+    /// <summary>
+    /// Describes a context for an <see cref="INotifyPropertyChanged" /> object.
+    /// </summary>
+    /// <typeparam name="TObj">Type of the object.</typeparam>
+    public interface IPropertyChangeContext<out TObj> : IDisposable
+        where TObj : global::System.ComponentModel.INotifyPropertyChanged
+    {
+        #region Properties (2)
 
-[assembly: AssemblyVersion("1.1.0.0")]
-[assembly: AssemblyFileVersion("1.1.0.0")]
+        /// <summary>
+        /// Gets the underlying object.
+        /// </summary>
+        TObj Object { get; }
+
+        /// <summary>
+        /// Gets the value of the property.
+        /// </summary>
+        object Value { get; }
+
+        #endregion Properties (2)
+
+        #region Methods (1)
+
+        /// <summary>
+        /// Unregisters the underlying action.
+        /// </summary>
+        void Unregister();
+
+        #endregion Methods (1)
+    }
+
+    #endregion INTERFACE: IPropertyChangeContext<out TObj>
+
+    #region INTERFACE: IPropertyChangeContext<out TObj, TProperty>
+
+    /// <summary>
+    /// Describes a context for an <see cref="INotifyPropertyChanged" /> object.
+    /// </summary>
+    /// <typeparam name="TObj">Type of the object.</typeparam>
+    /// <typeparam name="TProperty">Type of the property.</typeparam>
+    public interface IPropertyChangeContext<out TObj, TProperty> : IPropertyChangeContext<TObj>
+        where TObj : global::System.ComponentModel.INotifyPropertyChanged
+    {
+        #region Properties (1)
+
+        /// <summary>
+        /// Gets or sets the value of the property.
+        /// </summary>
+        new TProperty Value { get; }
+
+        #endregion Properties (1)
+    }
+
+    #endregion INTERFACE: IPropertyChangeContext<out TObj, TProperty>
+}

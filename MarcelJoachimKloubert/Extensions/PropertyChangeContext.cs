@@ -1,5 +1,5 @@
-/**********************************************************************************************************************
- * Notifiable.NET (https://github.com/mkloubert/Notifiable.NET)                                                       *
+﻿/**********************************************************************************************************************
+ * Extensions.NET (https://github.com/mkloubert/Extensions.NET)                                                       *
  *                                                                                                                    *
  * Copyright (c) 2015, Marcel Joachim Kloubert <marcel.kloubert@gmx.net>                                              *
  * All rights reserved.                                                                                               *
@@ -27,19 +27,89 @@
  *                                                                                                                    *
  **********************************************************************************************************************/
 
+using System;
+using System.ComponentModel;
 using System.Reflection;
-using System.Resources;
 
-[assembly: AssemblyTitle("Notifiable.NET")]
-[assembly: AssemblyDescription("Class library with implementations for INotifyPropertyChanged and INotifyCollectionChanged interfaces.")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Marcel Joachim Kloubert")]
-[assembly: AssemblyProduct("Notifiable.NET")]
-[assembly: AssemblyCopyright("Copyright © 2015  Marcel Joachim Kloubert")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
+namespace MarcelJoachimKloubert.Extensions
+{
+    internal class PropertyChangeContext<TObj, TProperty> : IPropertyChangeContext<TObj, TProperty>
+        where TObj : global::System.ComponentModel.INotifyPropertyChanged
+    {
+        #region Fields (1)
 
-[assembly: NeutralResourcesLanguage("en")]
+        private PropertyChangedEventHandler _handler;
 
-[assembly: AssemblyVersion("1.1.0.0")]
-[assembly: AssemblyFileVersion("1.1.0.0")]
+        #endregion Fields (1)
+
+        #region Constructors (1)
+
+        ~PropertyChangeContext()
+        {
+            Dispose(false);
+        }
+
+        #endregion Constructors (1)
+
+        #region Properties (5)
+
+        internal Action<IPropertyChangeContext<TObj, TProperty>> Action
+        {
+            set
+            {
+                var oldHandler = _handler;
+                if (oldHandler != null)
+                {
+                    Object.PropertyChanged -= oldHandler;
+                }
+
+                var newHandler = value != null ? new PropertyChangedEventHandler((sender, e) =>
+                    {
+                        value(this);
+                    }) : null;
+
+                _handler = null;
+                if (newHandler != null)
+                {
+                    Object.PropertyChanged += _handler = newHandler;
+                }
+            }
+        }
+
+        public TObj Object { get; internal set; }
+
+        internal PropertyInfo Property { get; set; }
+
+        public TProperty Value
+        {
+            get { return (TProperty)Property.GetValue(Object, null); }
+        }
+
+        object IPropertyChangeContext<TObj>.Value
+        {
+            get { return Value; }
+        }
+
+        #endregion Properties (5)
+
+        #region Methods (3)
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        private void Dispose(bool disposing)
+        {
+            Unregister();
+        }
+
+        public void Unregister()
+        {
+            Action = null;
+        }
+
+        #endregion Methods (3)
+    }
+}
