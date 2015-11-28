@@ -1,5 +1,5 @@
 ﻿/**********************************************************************************************************************
- * Notifiable.NET (https://github.com/mkloubert/Notifiable.NET)                                                       *
+ * Extensions.NET (https://github.com/mkloubert/Extensions.NET)                                                       *
  *                                                                                                                    *
  * Copyright (c) 2015, Marcel Joachim Kloubert <marcel.kloubert@gmx.net>                                              *
  * All rights reserved.                                                                                               *
@@ -27,21 +27,10 @@
  *                                                                                                                    *
  **********************************************************************************************************************/
 
-using System.Reflection;
-using System.Runtime.InteropServices;
-
-[assembly: AssemblyTitle("Notifiable.NET")]
-[assembly: AssemblyDescription("Class library with implementations for INotifyPropertyChanged and INotifyCollectionChanged interfaces.")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Marcel Joachim Kloubert")]
-[assembly: AssemblyProduct("Notifiable.NET")]
-[assembly: AssemblyCopyright("Copyright © 2015  Marcel Joachim Kloubert")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
-
-[assembly: ComVisible(false)]
-
-[assembly: Guid("1455852a-5f4f-4a8b-8b70-5b2e32b84ac4")]
-
-[assembly: AssemblyVersion("1.1.0.0")]
-[assembly: AssemblyFileVersion("1.1.0.0")]
+namespace MarcelJoachimKloubert.Extensions
+{
+    // Extension methods for "property change" objects.
+    static partial class MJKNotificationExtensionMethods
+    {
+    }
+}
