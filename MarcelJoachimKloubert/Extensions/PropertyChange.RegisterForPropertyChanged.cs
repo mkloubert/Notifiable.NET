@@ -63,13 +63,13 @@ namespace MarcelJoachimKloubert.Extensions
         {
             if (expr == null)
             {
-                throw new ArgumentNullException("expr");
+                throw new ArgumentNullException(nameof(expr));
             }
 
             var memberExpr = expr.Body as MemberExpression;
             if (memberExpr == null)
             {
-                throw new ArgumentException("expr");
+                throw new ArgumentException(nameof(expr));
             }
 
             var property = (PropertyInfo)memberExpr.Member;
@@ -99,31 +99,30 @@ namespace MarcelJoachimKloubert.Extensions
         {
             if (obj == null)
             {
-                throw new ArgumentNullException("obj");
+                throw new ArgumentNullException(nameof(obj));
             }
 
             if (action == null)
             {
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
             }
 
             if (propertyName == null)
             {
-                throw new ArgumentNullException("propertyName");
+                throw new ArgumentNullException(nameof(propertyName));
             }
 
             propertyName = propertyName.Trim();
             if (propertyName == string.Empty)
             {
-                throw new ArgumentException("propertyName");
+                throw new ArgumentException(nameof(propertyName));
             }
 
             var property = typeof(TObj).GetProperty(propertyName,
                                                     BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             if (property == null)
             {
-                throw new MissingMemberException(className: typeof(TObj).FullName,
-                                                 memberName: propertyName);
+                throw new MissingMemberException();
             }
 
             return RegisterForPropertyChanged<TObj, object>(obj: obj,

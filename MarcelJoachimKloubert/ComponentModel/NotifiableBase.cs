@@ -35,14 +35,13 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace MarcelJoachimKloubert.ComponentModel
 {
     /// <summary>
     /// A basic notifiable object.
     /// </summary>
-    public abstract partial class NotifiableBase : MarshalByRefObject, INotifyPropertyChanged
+    public abstract partial class NotifiableBase : INotifyPropertyChanged
     {
         #region Fields (2)
 
@@ -269,7 +268,7 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// Body of <paramref name="expr" /> is no <see cref="MemberExpression" />.
         /// </exception>
         /// <exception cref="InvalidCastException">
-        /// Member expression does not contain a <see cref="_PropertyInfo" />.
+        /// Member expression does not contain a <see cref="PropertyInfo" />.
         /// </exception>
         /// <exception cref="MissingMemberException">
         /// Property was not found.
@@ -294,7 +293,7 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// Body of <paramref name="expr" /> is no <see cref="MemberExpression" />.
         /// </exception>
         /// <exception cref="InvalidCastException">
-        /// Member expression does not contain a <see cref="_PropertyInfo" />.
+        /// Member expression does not contain a <see cref="PropertyInfo" />.
         /// </exception>
         /// <exception cref="MissingMemberException">
         /// Property was not found.
@@ -321,7 +320,7 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// Property was not found.
         /// </exception>
         protected TProperty Get<TProperty>([CallerMemberName]
-                                           IEnumerable<char> propertyName = null)
+                                           string propertyName = null)
         {
             bool found;
             return this.Get<TProperty>(propertyName: propertyName,
@@ -404,22 +403,22 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// Body of <paramref name="expr" /> is no <see cref="MemberExpression" />.
         /// </exception>
         /// <exception cref="InvalidCastException">
-        /// Member expression does not contain a <see cref="_PropertyInfo" />.
+        /// Member expression does not contain a <see cref="PropertyInfo" />.
         /// </exception>
         public static string GetPropertyName<TProperty>(Expression<Func<TProperty>> expr)
         {
             if (expr == null)
             {
-                throw new ArgumentNullException("expr");
+                throw new ArgumentNullException(nameof(expr));
             }
 
             var memberExpr = expr.Body as MemberExpression;
             if (memberExpr == null)
             {
-                throw new ArgumentException("expr.Body");
+                throw new ArgumentException(nameof(expr));
             }
 
-            return ((_PropertyInfo)memberExpr.Member).Name;
+            return ((PropertyInfo)memberExpr.Member).Name;
         }
 
         private void HandleReceiveNotificationFromAttributes<TProperty>(string propertyName, bool areDifferent)
@@ -466,9 +465,9 @@ namespace MarcelJoachimKloubert.ComponentModel
                     .Where(x => x != null);
 
             foreach (var property in propertiesToNotify.OrderBy(x => x.Attribute.SortOrder)
-                                                       .ThenBy(x => x.Property.Name, StringComparer.InvariantCulture)
+                                                       .ThenBy(x => x.Property.Name, StringComparer.Ordinal)
                                                        .Select(x => x.Property.Name)
-                                                       .Distinct(StringComparer.InvariantCulture))
+                                                       .Distinct(StringComparer.Ordinal))
             {
                 try
                 {
@@ -485,7 +484,7 @@ namespace MarcelJoachimKloubert.ComponentModel
         {
             var membersToNotify = new List<ReceiveValueFromArgs>();
 
-            var members = Enumerable.Empty<_MemberInfo>()
+            var members = Enumerable.Empty<MemberInfo>()
                                     .Concat(this.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
                                     .Concat(this.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
                                     .Concat(this.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic));
@@ -522,15 +521,15 @@ namespace MarcelJoachimKloubert.ComponentModel
 
             // now invoke them in a specific order
             foreach (var args in membersToNotify.OrderBy(x => x.Attribute.SortOrder)
-                                                .ThenBy(x => x.TargetMember.Name, StringComparer.InvariantCulture))
+                                                .ThenBy(x => x.TargetMember.Name, StringComparer.Ordinal))
             {
                 try
                 {
                     object resultToHandle = null;
 
-                    if (args.TargetMember is _MethodInfo)
+                    if (args.TargetMember is MethodInfo)
                     {
-                        var method = (_MethodInfo)args.TargetMember;
+                        var method = (MethodInfo)args.TargetMember;
 
                         object[] methodParams = null;
 
@@ -563,9 +562,9 @@ namespace MarcelJoachimKloubert.ComponentModel
                         resultToHandle = method.Invoke(obj: this,
                                                        parameters: methodParams);
                     }
-                    else if (args.TargetMember is _PropertyInfo)
+                    else if (args.TargetMember is PropertyInfo)
                     {
-                        var property = (_PropertyInfo)args.TargetMember;
+                        var property = (PropertyInfo)args.TargetMember;
 
                         if (property.Name == propertyName)
                         {
@@ -595,7 +594,7 @@ namespace MarcelJoachimKloubert.ComponentModel
                                 index = new object[1];
 
                                 if (indexParams[0].ParameterType.Equals(typeof(Type)) ||
-                                    typeof(Type).IsSubclassOf(indexParams[0].ParameterType) ||
+                                    typeof(Type).IsAssignableFrom(indexParams[0].ParameterType) ||
                                     typeof(Type).GetInterfaces().Any(x => x.Equals(indexParams[0].ParameterType)))
                                 {
                                     // property type
@@ -615,9 +614,9 @@ namespace MarcelJoachimKloubert.ComponentModel
 
                         resultToHandle = propertyValue;
                     }
-                    else if (args.TargetMember is _FieldInfo)
+                    else if (args.TargetMember is FieldInfo)
                     {
-                        var field = (_FieldInfo)args.TargetMember;
+                        var field = (FieldInfo)args.TargetMember;
 
                         object fieldValue = args.NewValue;
                         if (field.FieldType.Equals(typeof(IReceiveValueFromArgs)))
@@ -655,7 +654,7 @@ namespace MarcelJoachimKloubert.ComponentModel
         {
             if (action == null)
             {
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
             }
 
             this.InvokeThreadSafe(action: (obj, state) => state.Action(obj),
@@ -693,7 +692,7 @@ namespace MarcelJoachimKloubert.ComponentModel
         {
             if (action == null)
             {
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
             }
 
             if (actionStateFactory == null)
@@ -729,7 +728,7 @@ namespace MarcelJoachimKloubert.ComponentModel
         {
             if (func == null)
             {
-                throw new ArgumentNullException("func");
+                throw new ArgumentNullException(nameof(func));
             }
 
             return this.InvokeThreadSafe(func: (obj, state) => state.Function(obj),
@@ -771,12 +770,12 @@ namespace MarcelJoachimKloubert.ComponentModel
         {
             if (func == null)
             {
-                throw new ArgumentNullException("func");
+                throw new ArgumentNullException(nameof(func));
             }
 
             if (funcStateFactory == null)
             {
-                throw new ArgumentNullException("funcStateFactory");
+                throw new ArgumentNullException(nameof(funcStateFactory));
             }
 
             TResult result = default(TResult);
@@ -803,23 +802,15 @@ namespace MarcelJoachimKloubert.ComponentModel
 
             if (result == null)
             {
-                throw new ArgumentNullException("pn");
+                throw new ArgumentNullException(nameof(propertyName));
             }
 
             result = result.Trim();
 
             if (result == string.Empty)
             {
-                throw new ArgumentException("pn");
+                throw new ArgumentException(nameof(propertyName));
             }
-
-#if DEBUG
-            if (global::System.ComponentModel.TypeDescriptor.GetProperties(this)[result] == null)
-            {
-                throw new global::System.MissingMemberException(className: this.GetType().FullName,
-                                                                memberName: result);
-            }
-#endif
 
             return result;
         }
@@ -886,7 +877,7 @@ namespace MarcelJoachimKloubert.ComponentModel
         {
             if (e == null)
             {
-                throw new ArgumentNullException("e");
+                throw new ArgumentNullException(nameof(e));
             }
 
             if (handler != null)
@@ -913,7 +904,7 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// Body of <paramref name="expr" /> is no <see cref="MemberExpression" />.
         /// </exception>
         /// <exception cref="InvalidCastException">
-        /// Member expression does not contain a <see cref="_PropertyInfo" />.
+        /// Member expression does not contain a <see cref="PropertyInfo" />.
         /// </exception>
         /// <exception cref="MissingMemberException">
         /// Property was not found.
@@ -969,7 +960,7 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// Body of <paramref name="expr" /> is no <see cref="MemberExpression" />.
         /// </exception>
         /// <exception cref="InvalidCastException">
-        /// Member expression does not contain a <see cref="_PropertyInfo" />.
+        /// Member expression does not contain a <see cref="PropertyInfo" />.
         /// </exception>
         /// <exception cref="MissingMemberException">
         /// Property was not found.
