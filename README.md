@@ -7,8 +7,9 @@ Set of classes for easy and powerful implementation / use of [INotifyPropertyCha
 | Name  | Targets on  |
 | ----- | ----------- |
 | [master](https://github.com/mkloubert/Notifiable.NET)  | C# 4.0  |
-| CSharp5 (current)  | C# 5.0  |
+| [CSharp5](https://github.com/mkloubert/Notifiable.NET/tree/CSharp5)  | C# 5.0  |
 | [Portable8](https://github.com/mkloubert/Notifiable.NET/tree/Portable8)  | C# 4.0, .NET 4.5, Silverlight 5, Windows 8, Windows Phone 8.1 + 8 (Silverlight)  |
+| NetCore5 (current)  | C# 6.0, .NET Core 5  |
 
 ## Install
 
