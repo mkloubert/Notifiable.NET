@@ -56,9 +56,9 @@ namespace MarcelJoachimKloubert.Extensions
         /// <exception cref="InvalidCastException">
         /// Body of <paramref name="expr" /> contains no <see cref="PropertyInfo" />.
         /// </exception>
-        public static IPropertyChangeContext<TObj, TProperty> RegisterForPropertyChanged<TObj, TProperty>(this TObj obj,
-                                                                                                          Action<IPropertyChangeContext<TObj, TProperty>> action,
-                                                                                                          Expression<Func<TObj, TProperty>> expr)
+        public static IPropertyChangedContext<TObj, TProperty> RegisterForPropertyChanged<TObj, TProperty>(this TObj obj,
+                                                                                                           Action<IPropertyChangedContext<TObj, TProperty>> action,
+                                                                                                           Expression<Func<TObj, TProperty>> expr)
             where TObj : global::System.ComponentModel.INotifyPropertyChanged
         {
             if (expr == null)
@@ -92,9 +92,9 @@ namespace MarcelJoachimKloubert.Extensions
         /// <exception cref="MissingMemberException">
         /// No property found with the name stored in <paramref name="propertyName" />.
         /// </exception>
-        public static IPropertyChangeContext<TObj> RegisterForPropertyChanged<TObj>(this TObj obj,
-                                                                                    Action<IPropertyChangeContext<TObj>> action,
-                                                                                    string propertyName)
+        public static IPropertyChangedContext<TObj> RegisterForPropertyChanged<TObj>(this TObj obj,
+                                                                                     Action<IPropertyChangedContext<TObj>> action,
+                                                                                     string propertyName)
             where TObj : global::System.ComponentModel.INotifyPropertyChanged
         {
             if (obj == null)
@@ -131,12 +131,12 @@ namespace MarcelJoachimKloubert.Extensions
                                                             property: property);
         }
 
-        private static PropertyChangeContext<TObj, TProperty> RegisterForPropertyChanged<TObj, TProperty>(this TObj obj,
-                                                                                                          Action<IPropertyChangeContext<TObj, TProperty>> action,
-                                                                                                          PropertyInfo property)
+        private static PropertyChangedContext<TObj, TProperty> RegisterForPropertyChanged<TObj, TProperty>(this TObj obj,
+                                                                                                           Action<IPropertyChangedContext<TObj, TProperty>> action,
+                                                                                                           PropertyInfo property)
             where TObj : global::System.ComponentModel.INotifyPropertyChanged
         {
-            var result = new PropertyChangeContext<TObj, TProperty>()
+            var result = new PropertyChangedContext<TObj, TProperty>()
                 {
                     Object = obj,
                     Property = property,
