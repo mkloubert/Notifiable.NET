@@ -64,16 +64,16 @@ namespace MarcelJoachimKloubert.Collections
         public NotifiableCollection(IEnumerable<T> items = null, object syncRoot = null)
             : base(syncRoot: syncRoot)
         {
-            this._BASE_COLLECTION = this.InitBaseCollection(items) ?? new List<T>();
+            _BASE_COLLECTION = InitBaseCollection(items) ?? new List<T>();
 
-            if (this._BASE_COLLECTION is INotifyCollectionChanged)
+            if (_BASE_COLLECTION is INotifyCollectionChanged)
             {
-                ((INotifyCollectionChanged)this._BASE_COLLECTION).CollectionChanged += this.NotifiableCollection_CollectionChanged;
+                ((INotifyCollectionChanged)_BASE_COLLECTION).CollectionChanged += NotifiableCollection_CollectionChanged;
             }
 
-            if (this._BASE_COLLECTION is INotifyPropertyChanged)
+            if (_BASE_COLLECTION is INotifyPropertyChanged)
             {
-                ((INotifyPropertyChanged)this._BASE_COLLECTION).PropertyChanged += this.NotifiableCollection_PropertyChanged;
+                ((INotifyPropertyChanged)_BASE_COLLECTION).PropertyChanged += NotifiableCollection_PropertyChanged;
             }
         }
 
@@ -86,16 +86,16 @@ namespace MarcelJoachimKloubert.Collections
             {
                 try
                 {
-                    if (this._BASE_COLLECTION is INotifyCollectionChanged)
+                    if (_BASE_COLLECTION is INotifyCollectionChanged)
                     {
-                        ((INotifyCollectionChanged)this._BASE_COLLECTION).CollectionChanged -= this.NotifiableCollection_CollectionChanged;
+                        ((INotifyCollectionChanged)_BASE_COLLECTION).CollectionChanged -= NotifiableCollection_CollectionChanged;
                     }
                 }
                 finally
                 {
-                    if (this._BASE_COLLECTION is INotifyPropertyChanged)
+                    if (_BASE_COLLECTION is INotifyPropertyChanged)
                     {
-                        ((INotifyPropertyChanged)this._BASE_COLLECTION).PropertyChanged -= this.NotifiableCollection_PropertyChanged;
+                        ((INotifyPropertyChanged)_BASE_COLLECTION).PropertyChanged -= NotifiableCollection_PropertyChanged;
                     }
                 }
             }
@@ -123,7 +123,7 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         public ICollection<T> BaseCollection
         {
-            get { return this._BASE_COLLECTION; }
+            get { return _BASE_COLLECTION; }
         }
 
         /// <summary>
@@ -131,7 +131,7 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         public int Count
         {
-            get { return this._BASE_COLLECTION.Count; }
+            get { return _BASE_COLLECTION.Count; }
         }
 
         /// <summary>
@@ -139,9 +139,9 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         public bool IsEditing
         {
-            get { return this.Get(() => this.IsEditing); }
+            get { return Get(() => IsEditing); }
 
-            private set { this.Set(value, () => this.IsEditing); }
+            private set { Set(value, () => IsEditing); }
         }
 
         /// <summary>
@@ -149,7 +149,7 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         public bool IsReadOnly
         {
-            get { return this._BASE_COLLECTION.IsReadOnly; }
+            get { return _BASE_COLLECTION.IsReadOnly; }
         }
 
         /// <summary>
@@ -157,7 +157,7 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         public bool IsSynchronized
         {
-            get { return this.IfICollection((coll) => coll.IsSynchronized); }
+            get { return IfICollection((coll) => coll.IsSynchronized); }
         }
 
         #endregion Properties (5)
@@ -169,12 +169,12 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         public void Add(T item)
         {
-            this._BASE_COLLECTION.Add(item);
-            this.RaiseCollectionEvents();
+            _BASE_COLLECTION.Add(item);
+            RaiseCollectionEvents();
 
             var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Add,
                                                          changedItem: item);
-            this.RaiseCollectionChanged(e);
+            RaiseCollectionChanged(e);
         }
 
         /// <summary>
@@ -203,16 +203,16 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         public void Clear()
         {
-            var oldCount = this._BASE_COLLECTION.Count;
+            var oldCount = _BASE_COLLECTION.Count;
 
-            this._BASE_COLLECTION.Clear();
+            _BASE_COLLECTION.Clear();
 
-            if (oldCount != this._BASE_COLLECTION.Count)
+            if (oldCount != _BASE_COLLECTION.Count)
             {
-                this.RaiseCollectionEvents();
+                RaiseCollectionEvents();
 
                 var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Reset);
-                this.RaiseCollectionChanged(e);
+                RaiseCollectionChanged(e);
             }
         }
 
@@ -221,7 +221,7 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         public bool Contains(T item)
         {
-            return this._BASE_COLLECTION.Contains(item);
+            return _BASE_COLLECTION.Contains(item);
         }
 
         /// <summary>
@@ -229,12 +229,12 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         public void CopyTo(T[] array, int arrayIndex)
         {
-            this._BASE_COLLECTION.CopyTo(array, arrayIndex);
+            _BASE_COLLECTION.CopyTo(array, arrayIndex);
         }
 
         void ICollection.CopyTo(Array array, int index)
         {
-            var srcArray = AsArray(this._BASE_COLLECTION);
+            var srcArray = AsArray(_BASE_COLLECTION);
 
             Array.Copy(sourceArray: srcArray, sourceIndex: 0,
                        destinationArray: array, destinationIndex: index,
@@ -256,11 +256,11 @@ namespace MarcelJoachimKloubert.Collections
                 throw new ArgumentNullException("action");
             }
 
-            this.EditCollection(action: (coll, state) => state.Action(coll),
-                                actionState: new
-                                    {
-                                        Action = action,
-                                    });
+            EditCollection(action: (coll, state) => state.Action(coll),
+                           actionState: new
+                               {
+                                   Action = action,
+                               });
         }
 
         /// <summary>
@@ -275,8 +275,8 @@ namespace MarcelJoachimKloubert.Collections
         /// </exception>
         public void EditCollection<TState>(Action<NotifiableCollection<T>, TState> action, TState actionState)
         {
-            this.EditCollection<TState>(action: action,
-                                        actionStateFactory: (coll) => actionState);
+            EditCollection<TState>(action: action,
+                                   actionStateFactory: (coll) => actionState);
         }
 
         /// <summary>
@@ -302,7 +302,7 @@ namespace MarcelJoachimKloubert.Collections
                 throw new ArgumentNullException("actionStateFactory");
             }
 
-            this.EditCollection(
+            EditCollection(
                 func: (coll, state) =>
                     {
                         state.Action(coll,
@@ -334,11 +334,11 @@ namespace MarcelJoachimKloubert.Collections
                 throw new ArgumentNullException("func");
             }
 
-            return this.EditCollection(func: (coll, state) => state.Function(coll),
-                                       funcState: new
-                                           {
-                                               Function = func,
-                                           });
+            return EditCollection(func: (coll, state) => state.Function(coll),
+                                  funcState: new
+                                      {
+                                          Function = func,
+                                      });
         }
 
         /// <summary>
@@ -355,8 +355,8 @@ namespace MarcelJoachimKloubert.Collections
         /// </exception>
         public TResult EditCollection<TState, TResult>(Func<NotifiableCollection<T>, TState, TResult> func, TState funcState)
         {
-            return this.EditCollection<TState, TResult>(func: func,
-                                                        funcStateFactory: (coll) => funcState);
+            return EditCollection<TState, TResult>(func: func,
+                                                   funcStateFactory: (coll) => funcState);
         }
 
         /// <summary>
@@ -384,30 +384,30 @@ namespace MarcelJoachimKloubert.Collections
                 throw new ArgumentNullException("funcStateFactory");
             }
 
-            var oldState = this.IsEditing;
+            var oldState = IsEditing;
             try
             {
-                this.IsEditing = true;
+                IsEditing = true;
 
                 return func(this,
                             funcStateFactory(this));
             }
             catch (Exception ex)
             {
-                this.RaiseError(ex);
+                RaiseError(ex);
 
-                throw ex;
+                throw;
             }
             finally
             {
-                this.IsEditing = oldState;
+                IsEditing = oldState;
 
                 if (!oldState)
                 {
-                    this.RaiseCollectionEvents();
+                    RaiseCollectionEvents();
 
                     var e = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset);
-                    this.RaiseCollectionChanged(e);
+                    RaiseCollectionChanged(e);
                 }
             }
         }
@@ -417,12 +417,12 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         public IEnumerator<T> GetEnumerator()
         {
-            return this._BASE_COLLECTION.GetEnumerator();
+            return _BASE_COLLECTION.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
 
         /// <summary>
@@ -442,16 +442,16 @@ namespace MarcelJoachimKloubert.Collections
                 throw new ArgumentNullException("funcYes");
             }
 
-            this.IfICollection(actionYes: (coll, state) => state.ActionYes(coll),
-                               actionState: new
-                                   {
-                                       ActionNo = actionNo,
-                                       ActionYes = actionYes,
-                                   },
-                               actionNo: (coll, state) =>
-                                   {
-                                       state.ActionNo(coll);
-                                   });
+            IfICollection(actionYes: (coll, state) => state.ActionYes(coll),
+                          actionState: new
+                              {
+                                  ActionNo = actionNo,
+                                  ActionYes = actionYes,
+                              },
+                          actionNo: (coll, state) =>
+                              {
+                                  state.ActionNo(coll);
+                              });
         }
 
         /// <summary>
@@ -469,9 +469,9 @@ namespace MarcelJoachimKloubert.Collections
                                              TState actionState,
                                              Action<ICollection<T>, TState> actionNo = null)
         {
-            this.IfICollection<TState>(actionYes: actionYes,
-                                       actionNo: actionNo,
-                                       actionStateFactory: (coll) => actionState);
+            IfICollection<TState>(actionYes: actionYes,
+                                  actionNo: actionNo,
+                                  actionStateFactory: (coll) => actionState);
         }
 
         /// <summary>
@@ -491,15 +491,15 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (actionYes == null)
             {
-                throw new ArgumentNullException("funcYes");
+                throw new ArgumentNullException("actionYes");
             }
 
             if (actionStateFactory == null)
             {
-                throw new ArgumentNullException("funcStateFactory");
+                throw new ArgumentNullException("actionStateFactory");
             }
 
-            this.IfICollection(
+            IfICollection(
                 funcYes: (coll, state) =>
                     {
                         state.ActionYes(coll, state.State);
@@ -545,14 +545,14 @@ namespace MarcelJoachimKloubert.Collections
                 throw new ArgumentNullException("funcYes");
             }
 
-            return this.IfICollection(funcYes: (coll, state) => state.FunctionYes(coll),
-                                      funcState: new
-                                          {
-                                              FunctionNo = funcNo,
-                                              FunctionYes = funcYes,
-                                          },
-                                      funcNo: (coll, state) => state.FunctionNo != null ? state.FunctionNo(coll)
-                                                                                        : default(TResult));
+            return IfICollection(funcYes: (coll, state) => state.FunctionYes(coll),
+                                 funcState: new
+                                     {
+                                         FunctionNo = funcNo,
+                                         FunctionYes = funcYes,
+                                     },
+                                 funcNo: (coll, state) => state.FunctionNo != null ? state.FunctionNo(coll)
+                                                                                   : default(TResult));
         }
 
         /// <summary>
@@ -575,9 +575,9 @@ namespace MarcelJoachimKloubert.Collections
                                                          TState funcState,
                                                          Func<ICollection<T>, TState, TResult> funcNo = null)
         {
-            return this.IfICollection<TState, TResult>(funcYes: funcYes,
-                                                       funcNo: funcNo,
-                                                       funcStateFactory: (coll) => funcState);
+            return IfICollection<TState, TResult>(funcYes: funcYes,
+                                                  funcNo: funcNo,
+                                                  funcStateFactory: (coll) => funcState);
         }
 
         /// <summary>
@@ -617,13 +617,13 @@ namespace MarcelJoachimKloubert.Collections
 
             var funcState = funcStateFactory(this);
 
-            var collection = this._BASE_COLLECTION as ICollection;
+            var collection = _BASE_COLLECTION as ICollection;
             if (collection != null)
             {
                 return funcYes(collection, funcState);
             }
 
-            return funcNo(this._BASE_COLLECTION, funcState);
+            return funcNo(_BASE_COLLECTION, funcState);
         }
 
         /// <summary>
@@ -650,21 +650,20 @@ namespace MarcelJoachimKloubert.Collections
 
         private void NotifiableCollection_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            this.RaiseCollectionChanged(e);
+            RaiseCollectionChanged(e);
         }
 
         private void NotifiableCollection_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            var property = this.GetType()
-                               .GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                               .FirstOrDefault(x => x.Name == e.PropertyName);
+            var property = GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                                    .FirstOrDefault(x => x.Name == e.PropertyName);
 
             if (property == null)
             {
                 return;
             }
 
-            this.RaisePropertyChanged(property.Name);
+            RaisePropertyChanged(property.Name);
         }
 
         /// <summary>
@@ -683,11 +682,11 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (args.GetNewValue<bool>())
             {
-                this.OnBeginEdit();
+                OnBeginEdit();
             }
             else
             {
-                this.OnEndEdit();
+                OnEndEdit();
             }
         }
 
@@ -716,12 +715,12 @@ namespace MarcelJoachimKloubert.Collections
                 throw new ArgumentNullException("e");
             }
 
-            if (this.IsEditing)
+            if (IsEditing)
             {
                 return null;
             }
 
-            var handler = this.CollectionChanged;
+            var handler = CollectionChanged;
             if (handler != null)
             {
                 handler(this, e);
@@ -736,12 +735,12 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         protected virtual void RaiseCollectionEvents()
         {
-            if (this.IsEditing)
+            if (IsEditing)
             {
                 return;
             }
 
-            this.RaisePropertyChanged(() => this.Count);
+            RaisePropertyChanged(() => Count);
         }
 
         /// <summary>
@@ -749,15 +748,15 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         public bool Remove(T item)
         {
-            var result = this._BASE_COLLECTION.Remove(item);
+            var result = _BASE_COLLECTION.Remove(item);
 
             if (result)
             {
-                this.RaiseCollectionEvents();
+                RaiseCollectionEvents();
 
                 var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Remove,
                                                              changedItem: item);
-                this.RaiseCollectionChanged(e);
+                RaiseCollectionChanged(e);
             }
 
             return result;

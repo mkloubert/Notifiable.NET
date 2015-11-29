@@ -75,23 +75,23 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         public T this[int index]
         {
-            get { return this.BaseCollection[index]; }
+            get { return BaseCollection[index]; }
 
             set
             {
-                var oldItem = this.TryGetOldItem(index);
+                var oldItem = TryGetOldItem(index);
 
-                this.BaseCollection[index] = value;
+                BaseCollection[index] = value;
 
-                var comparer = this.GetPropertyValueEqualityComparer<T>("Item") ?? EqualityComparer<T>.Default;
+                var comparer = GetPropertyValueEqualityComparer<T>("Item") ?? EqualityComparer<T>.Default;
                 if (!comparer.Equals(oldItem, value))
                 {
-                    this.RaisePropertyChanged("Item");
+                    RaisePropertyChanged("Item");
                 }
 
                 var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Replace,
                                                              newItem: value, oldItem: oldItem, index: index);
-                this.RaiseCollectionChanged(e);
+                RaiseCollectionChanged(e);
             }
         }
 
@@ -99,7 +99,7 @@ namespace MarcelJoachimKloubert.Collections
         {
             get { return this[index]; }
 
-            set { this[index] = this.ConvertTo<T>(value); }
+            set { this[index] = ConvertTo<T>(value); }
         }
 
         /// <summary>
@@ -110,8 +110,8 @@ namespace MarcelJoachimKloubert.Collections
         {
             get
             {
-                return this.IfIList((list) => list.IsFixedSize,
-                                    (list) => list.IsReadOnly);
+                return IfIList((list) => list.IsFixedSize,
+                               (list) => list.IsReadOnly);
             }
         }
 
@@ -121,13 +121,13 @@ namespace MarcelJoachimKloubert.Collections
 
         int IList.Add(object value)
         {
-            this.Add(this.ConvertTo<T>(value));
-            return this.Count - 1;
+            Add(ConvertTo<T>(value));
+            return Count - 1;
         }
 
         bool IList.Contains(object value)
         {
-            return this.Contains(this.ConvertTo<T>(value));
+            return Contains(ConvertTo<T>(value));
         }
 
         /// <summary>
@@ -145,11 +145,11 @@ namespace MarcelJoachimKloubert.Collections
                 throw new ArgumentNullException("action");
             }
 
-            this.EditList(action: (list, state) => state.Action(list),
-                          actionState: new
-                              {
-                                  Action = action,
-                              });
+            EditList(action: (list, state) => state.Action(list),
+                     actionState: new
+                         {
+                             Action = action,
+                         });
         }
 
         /// <summary>
@@ -164,8 +164,8 @@ namespace MarcelJoachimKloubert.Collections
         /// </exception>
         public void EditList<TState>(Action<NotifiableList<T>, TState> action, TState actionState)
         {
-            this.EditList<TState>(action: action,
-                                  actionStateFactory: (list) => actionState);
+            EditList<TState>(action: action,
+                             actionStateFactory: (list) => actionState);
         }
 
         /// <summary>
@@ -191,7 +191,7 @@ namespace MarcelJoachimKloubert.Collections
                 throw new ArgumentNullException("actionStateFactory");
             }
 
-            this.EditList(
+            EditList(
                 func: (list, state) =>
                     {
                         state.Action(list,
@@ -223,11 +223,11 @@ namespace MarcelJoachimKloubert.Collections
                 throw new ArgumentNullException("func");
             }
 
-            return this.EditList(func: (list, state) => state.Function(list),
-                                 funcState: new
-                                     {
-                                         Function = func,
-                                     });
+            return EditList(func: (list, state) => state.Function(list),
+                            funcState: new
+                                {
+                                    Function = func,
+                                });
         }
 
         /// <summary>
@@ -244,8 +244,8 @@ namespace MarcelJoachimKloubert.Collections
         /// </exception>
         public TResult EditList<TState, TResult>(Func<NotifiableList<T>, TState, TResult> func, TState funcState)
         {
-            return this.EditList<TState, TResult>(func: func,
-                                                  funcStateFactory: (list) => funcState);
+            return EditList<TState, TResult>(func: func,
+                                             funcStateFactory: (list) => funcState);
         }
 
         /// <summary>
@@ -273,7 +273,7 @@ namespace MarcelJoachimKloubert.Collections
                 throw new ArgumentNullException("funcStateFactory");
             }
 
-            return this.EditCollection(
+            return EditCollection(
                 func: (coll, state) =>
                     {
                         var list = (NotifiableList<T>)coll;
@@ -302,10 +302,10 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (actionYes == null)
             {
-                throw new ArgumentNullException("funcYes");
+                throw new ArgumentNullException("actionYes");
             }
 
-            this.IfIList(actionYes: (list, state) => state.ActionYes(list),
+            IfIList(actionYes: (list, state) => state.ActionYes(list),
                          actionState: new
                              {
                                  ActionNo = actionNo,
@@ -332,9 +332,9 @@ namespace MarcelJoachimKloubert.Collections
                                        TState actionState,
                                        Action<IList<T>, TState> actionNo = null)
         {
-            this.IfIList<TState>(actionYes: actionYes,
-                                 actionNo: actionNo,
-                                 actionStateFactory: (list) => actionState);
+            IfIList<TState>(actionYes: actionYes,
+                            actionNo: actionNo,
+                            actionStateFactory: (list) => actionState);
         }
 
         /// <summary>
@@ -354,15 +354,15 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (actionYes == null)
             {
-                throw new ArgumentNullException("funcYes");
+                throw new ArgumentNullException("actionYes");
             }
 
             if (actionStateFactory == null)
             {
-                throw new ArgumentNullException("funcStateFactory");
+                throw new ArgumentNullException("actionStateFactory");
             }
 
-            this.IfIList(
+            IfIList(
                 funcYes: (list, state) =>
                     {
                         state.ActionYes(list, state.State);
@@ -408,14 +408,14 @@ namespace MarcelJoachimKloubert.Collections
                 throw new ArgumentNullException("funcYes");
             }
 
-            return this.IfIList(funcYes: (list, state) => state.FunctionYes(list),
-                                funcState: new
-                                    {
-                                        FunctionNo = funcNo,
-                                        FunctionYes = funcYes,
-                                    },
-                                 funcNo: (list, state) => state.FunctionNo != null ? state.FunctionNo(list)
-                                                                                   : default(TResult));
+            return IfIList(funcYes: (list, state) => state.FunctionYes(list),
+                           funcState: new
+                               {
+                                   FunctionNo = funcNo,
+                                   FunctionYes = funcYes,
+                               },
+                               funcNo: (list, state) => state.FunctionNo != null ? state.FunctionNo(list)
+                                                                                 : default(TResult));
         }
 
         /// <summary>
@@ -438,9 +438,9 @@ namespace MarcelJoachimKloubert.Collections
                                                    TState funcState,
                                                    Func<IList<T>, TState, TResult> funcNo = null)
         {
-            return this.IfIList<TState, TResult>(funcYes: funcYes,
-                                                 funcNo: funcNo,
-                                                 funcStateFactory: (coll) => funcState);
+            return IfIList<TState, TResult>(funcYes: funcYes,
+                                            funcNo: funcNo,
+                                            funcStateFactory: (coll) => funcState);
         }
 
         /// <summary>
@@ -480,13 +480,13 @@ namespace MarcelJoachimKloubert.Collections
 
             var funcState = funcStateFactory(this);
 
-            var iList = this.BaseCollection as IList;
+            var iList = BaseCollection as IList;
             if (iList != null)
             {
                 return funcYes(iList, funcState);
             }
 
-            return funcNo(this.BaseCollection, funcState);
+            return funcNo(BaseCollection, funcState);
         }
 
         /// <summary>
@@ -494,12 +494,12 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         public int IndexOf(T item)
         {
-            return this.BaseCollection.IndexOf(item);
+            return BaseCollection.IndexOf(item);
         }
 
         int IList.IndexOf(object value)
         {
-            return this.IndexOf(this.ConvertTo<T>(value));
+            return IndexOf(ConvertTo<T>(value));
         }
 
         /// <summary>
@@ -527,26 +527,26 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         public void Insert(int index, T item)
         {
-            var oldItem = this.TryGetOldItem(index);
+            var oldItem = TryGetOldItem(index);
 
-            this.BaseCollection.Insert(index, item);
-            this.RaiseCollectionEvents();
+            BaseCollection.Insert(index, item);
+            RaiseCollectionEvents();
 
             var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Move,
                                                          changedItem: oldItem,
                                                          index: index + 1, oldIndex: index);
-            this.RaiseCollectionChanged(e);
+            RaiseCollectionChanged(e);
         }
 
         void IList.Insert(int index, object value)
         {
-            this.Insert(index,
-                        this.ConvertTo<T>(value));
+            Insert(index,
+                   ConvertTo<T>(value));
         }
 
         void IList.Remove(object value)
         {
-            this.Remove(this.ConvertTo<T>(value));
+            Remove(ConvertTo<T>(value));
         }
 
         /// <summary>
@@ -554,18 +554,18 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         public void RemoveAt(int index)
         {
-            var oldCount = this.Count;
-            var oldItem = this.TryGetOldItem(index);
+            var oldCount = Count;
+            var oldItem = TryGetOldItem(index);
 
-            this.BaseCollection.RemoveAt(index);
+            BaseCollection.RemoveAt(index);
 
-            if (oldCount != this.Count)
+            if (oldCount != Count)
             {
-                this.RaiseCollectionEvents();
+                RaiseCollectionEvents();
 
                 var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Remove,
-                                                         changedItem: oldItem, index: index);
-                this.RaiseCollectionChanged(e);
+                                                             changedItem: oldItem, index: index);
+                RaiseCollectionChanged(e);
             }
         }
 

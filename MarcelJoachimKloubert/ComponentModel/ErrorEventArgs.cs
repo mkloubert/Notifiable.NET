@@ -38,7 +38,7 @@ namespace MarcelJoachimKloubert.ComponentModel
     {
         #region Fields (1)
 
-        private Exception _exception;
+        private readonly Exception _EXCEPTION;
 
         #endregion Fields (1)
 
@@ -50,7 +50,7 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// <param name="exception">The underlying exception (if defined).</param>
         public ErrorEventArgs(Exception exception)
         {
-            this._exception = exception;
+            _EXCEPTION = exception;
         }
 
         #endregion Constructors (1)
@@ -63,10 +63,10 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// <returns>The base exception or <see langword="null" /> if not defined.</returns>
         public Exception GetBaseException()
         {
-            var result = this.GetException();
+            var result = GetException();
             if (result != null)
             {
-                result = result.GetBaseException() ?? result;
+                result = result.GetBaseException();
             }
 
             return result;
@@ -78,7 +78,7 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// <returns>The exception or <see langword="null" /> if not defined.</returns>
         public Exception GetException()
         {
-            return this._exception;
+            return _EXCEPTION;
         }
 
         #endregion Methods (2)

@@ -79,8 +79,8 @@ namespace MarcelJoachimKloubert.Collections
         {
             get
             {
-                return this.IfIDictionary((dict) => dict.IsFixedSize,
-                                          (dict) => dict.IsReadOnly);
+                return IfIDictionary((dict) => dict.IsFixedSize,
+                                     (dict) => dict.IsReadOnly);
             }
         }
 
@@ -89,15 +89,15 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         public ICollection<TKey> Keys
         {
-            get { return this.BaseCollection.Keys; }
+            get { return BaseCollection.Keys; }
         }
 
         ICollection IDictionary.Keys
         {
             get
             {
-                return this.IfIDictionary((dict) => dict.Keys,
-                                          (dict) => AsCollection(dict.Keys));
+                return IfIDictionary((dict) => dict.Keys,
+                                     (dict) => AsCollection(dict.Keys));
             }
         }
 
@@ -106,32 +106,32 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         public TValue this[TKey key]
         {
-            get { return this.BaseCollection[key]; }
+            get { return BaseCollection[key]; }
 
             set
             {
-                var oldValue = this.TryGetOldValue(key);
+                var oldValue = TryGetOldValue(key);
 
-                this.BaseCollection[key] = value;
+                BaseCollection[key] = value;
 
-                var valueComparer = this.GetPropertyValueEqualityComparer<TValue>("Item") ?? EqualityComparer<TValue>.Default;
+                var valueComparer = GetPropertyValueEqualityComparer<TValue>("Item") ?? EqualityComparer<TValue>.Default;
                 if (!valueComparer.Equals(oldValue, value))
                 {
-                    this.RaisePropertyChanged("Item");
-                    this.RaisePropertyChanged(() => this.Values);
+                    RaisePropertyChanged("Item");
+                    RaisePropertyChanged(() => Values);
                 }
 
                 var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Replace,
                                                              newItem: value, oldItem: oldValue);
-                this.RaiseCollectionChanged(e);
+                RaiseCollectionChanged(e);
             }
         }
 
         object IDictionary.this[object key]
         {
-            get { return this[this.ConvertTo<TKey>(key)]; }
+            get { return this[ConvertTo<TKey>(key)]; }
 
-            set { this[this.ConvertTo<TKey>(key)] = this.ConvertTo<TValue>(value); }
+            set { this[ConvertTo<TKey>(key)] = ConvertTo<TValue>(value); }
         }
 
         /// <summary>
@@ -139,15 +139,15 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         public ICollection<TValue> Values
         {
-            get { return this.BaseCollection.Values; }
+            get { return BaseCollection.Values; }
         }
 
         ICollection IDictionary.Values
         {
             get
             {
-                return this.IfIDictionary((dict) => dict.Values,
-                                          (dict) => AsCollection(dict.Values));
+                return IfIDictionary((dict) => dict.Values,
+                                     (dict) => AsCollection(dict.Values));
             }
         }
 
@@ -160,23 +160,23 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         public void Add(TKey key, TValue value)
         {
-            this.BaseCollection.Add(key, value);
-            this.RaiseCollectionEvents();
+            BaseCollection.Add(key, value);
+            RaiseCollectionEvents();
 
             var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Add,
                                                          changedItem: new KeyValuePair<TKey, TValue>(key, value));
-            this.RaiseCollectionChanged(e);
+            RaiseCollectionChanged(e);
         }
 
         void IDictionary.Add(object key, object value)
         {
-            this.Add(this.ConvertTo<TKey>(key),
-                     this.ConvertTo<TValue>(value));
+            Add(ConvertTo<TKey>(key),
+                ConvertTo<TValue>(value));
         }
 
         bool IDictionary.Contains(object key)
         {
-            return this.ContainsKey(this.ConvertTo<TKey>(key));
+            return ContainsKey(ConvertTo<TKey>(key));
         }
 
         /// <summary>
@@ -184,7 +184,7 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         public bool ContainsKey(TKey key)
         {
-            return this.BaseCollection.ContainsKey(key);
+            return BaseCollection.ContainsKey(key);
         }
 
         /// <summary>
@@ -202,11 +202,11 @@ namespace MarcelJoachimKloubert.Collections
                 throw new ArgumentNullException("action");
             }
 
-            this.EditDictionary(action: (dict, state) => state.Action(dict),
-                                actionState: new
-                                    {
-                                        Action = action,
-                                    });
+            EditDictionary(action: (dict, state) => state.Action(dict),
+                           actionState: new
+                               {
+                                   Action = action,
+                               });
         }
 
         /// <summary>
@@ -221,8 +221,8 @@ namespace MarcelJoachimKloubert.Collections
         /// </exception>
         public void EditDictionary<TState>(Action<NotifiableDictionary<TKey, TValue>, TState> action, TState actionState)
         {
-            this.EditDictionary<TState>(action: action,
-                                        actionStateFactory: (dict) => actionState);
+            EditDictionary<TState>(action: action,
+                                   actionStateFactory: (dict) => actionState);
         }
 
         /// <summary>
@@ -248,7 +248,7 @@ namespace MarcelJoachimKloubert.Collections
                 throw new ArgumentNullException("actionStateFactory");
             }
 
-            this.EditDictionary(
+            EditDictionary(
                 func: (dict, state) =>
                     {
                         state.Action(dict,
@@ -280,11 +280,11 @@ namespace MarcelJoachimKloubert.Collections
                 throw new ArgumentNullException("func");
             }
 
-            return this.EditDictionary(func: (dict, state) => state.Function(dict),
-                                       funcState: new
-                                           {
-                                               Function = func,
-                                           });
+            return EditDictionary(func: (dict, state) => state.Function(dict),
+                                  funcState: new
+                                      {
+                                          Function = func,
+                                      });
         }
 
         /// <summary>
@@ -301,8 +301,8 @@ namespace MarcelJoachimKloubert.Collections
         /// </exception>
         public TResult EditDictionary<TState, TResult>(Func<NotifiableDictionary<TKey, TValue>, TState, TResult> func, TState funcState)
         {
-            return this.EditDictionary<TState, TResult>(func: func,
-                                                        funcStateFactory: (dict) => funcState);
+            return EditDictionary<TState, TResult>(func: func,
+                                                   funcStateFactory: (dict) => funcState);
         }
 
         /// <summary>
@@ -330,7 +330,7 @@ namespace MarcelJoachimKloubert.Collections
                 throw new ArgumentNullException("funcStateFactory");
             }
 
-            return this.EditCollection(
+            return EditCollection(
                 func: (coll, state) =>
                     {
                         var dict = (NotifiableDictionary<TKey, TValue>)coll;
@@ -347,8 +347,8 @@ namespace MarcelJoachimKloubert.Collections
 
         IDictionaryEnumerator IDictionary.GetEnumerator()
         {
-            return this.IfIDictionary((dict) => dict.GetEnumerator(),
-                                      (dict) => new Dictionary<TKey, TValue>(dict).GetEnumerator());
+            return IfIDictionary((dict) => dict.GetEnumerator(),
+                                 (dict) => new Dictionary<TKey, TValue>(dict).GetEnumerator());
         }
 
         /// <summary>
@@ -365,19 +365,19 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (actionYes == null)
             {
-                throw new ArgumentNullException("funcYes");
+                throw new ArgumentNullException("actionYes");
             }
 
-            this.IfIDictionary(actionYes: (dict, state) => state.ActionYes(dict),
-                               actionState: new
-                                   {
-                                       ActionNo = actionNo,
-                                       ActionYes = actionYes,
-                                   },
-                               actionNo: (coll, state) =>
-                                   {
-                                       state.ActionNo(coll);
-                                   });
+            IfIDictionary(actionYes: (dict, state) => state.ActionYes(dict),
+                          actionState: new
+                              {
+                                  ActionNo = actionNo,
+                                  ActionYes = actionYes,
+                              },
+                          actionNo: (coll, state) =>
+                              {
+                                  state.ActionNo(coll);
+                              });
         }
 
         /// <summary>
@@ -395,9 +395,9 @@ namespace MarcelJoachimKloubert.Collections
                                              TState actionState,
                                              Action<IDictionary<TKey, TValue>, TState> actionNo = null)
         {
-            this.IfIDictionary<TState>(actionYes: actionYes,
-                                       actionNo: actionNo,
-                                       actionStateFactory: (dict) => actionState);
+            IfIDictionary<TState>(actionYes: actionYes,
+                                  actionNo: actionNo,
+                                  actionStateFactory: (dict) => actionState);
         }
 
         /// <summary>
@@ -417,15 +417,15 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (actionYes == null)
             {
-                throw new ArgumentNullException("funcYes");
+                throw new ArgumentNullException("actionYes");
             }
 
             if (actionStateFactory == null)
             {
-                throw new ArgumentNullException("funcStateFactory");
+                throw new ArgumentNullException("actionStateFactory");
             }
 
-            this.IfIDictionary(
+            IfIDictionary(
                 funcYes: (dict, state) =>
                     {
                         state.ActionYes(dict, state.State);
@@ -471,14 +471,14 @@ namespace MarcelJoachimKloubert.Collections
                 throw new ArgumentNullException("funcYes");
             }
 
-            return this.IfIDictionary(funcYes: (dict, state) => state.FunctionYes(dict),
-                                      funcState: new
-                                          {
-                                              FunctionNo = funcNo,
-                                              FunctionYes = funcYes,
-                                          },
-                                      funcNo: (dict, state) => state.FunctionNo != null ? state.FunctionNo(dict)
-                                                                                        : default(TResult));
+            return IfIDictionary(funcYes: (dict, state) => state.FunctionYes(dict),
+                                 funcState: new
+                                     {
+                                         FunctionNo = funcNo,
+                                         FunctionYes = funcYes,
+                                     },
+                                 funcNo: (dict, state) => state.FunctionNo != null ? state.FunctionNo(dict)
+                                                                                   : default(TResult));
         }
 
         /// <summary>
@@ -501,9 +501,9 @@ namespace MarcelJoachimKloubert.Collections
                                                          TState funcState,
                                                          Func<IDictionary<TKey, TValue>, TState, TResult> funcNo = null)
         {
-            return this.IfIDictionary<TState, TResult>(funcYes: funcYes,
-                                                       funcNo: funcNo,
-                                                       funcStateFactory: (dict) => funcState);
+            return IfIDictionary<TState, TResult>(funcYes: funcYes,
+                                                  funcNo: funcNo,
+                                                  funcStateFactory: (dict) => funcState);
         }
 
         /// <summary>
@@ -543,13 +543,13 @@ namespace MarcelJoachimKloubert.Collections
 
             var funcState = funcStateFactory(this);
 
-            var dictionary = this.BaseCollection as IDictionary;
+            var dictionary = BaseCollection as IDictionary;
             if (dictionary != null)
             {
                 return funcYes(dictionary, funcState);
             }
 
-            return funcNo(this.BaseCollection, funcState);
+            return funcNo(BaseCollection, funcState);
         }
 
         /// <summary>
@@ -568,9 +568,12 @@ namespace MarcelJoachimKloubert.Collections
 
             if (items != null)
             {
-                foreach (var i in items)
+                using (var e = items.GetEnumerator())
                 {
-                    result.Add(i);
+                    while (e.MoveNext())
+                    {
+                        result.Add(e.Current);
+                    }
                 }
             }
 
@@ -582,15 +585,15 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         protected override void RaiseCollectionEvents()
         {
-            if (this.IsEditing)
+            if (IsEditing)
             {
                 return;
             }
 
             base.RaiseCollectionEvents();
 
-            this.RaisePropertyChanged(() => this.Keys);
-            this.RaisePropertyChanged(() => this.Values);
+            RaisePropertyChanged(() => Keys);
+            RaisePropertyChanged(() => Values);
         }
 
         /// <summary>
@@ -598,17 +601,17 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         public bool Remove(TKey key)
         {
-            var oldValue = this.TryGetOldValue(key);
+            var oldValue = TryGetOldValue(key);
 
-            var result = this.BaseCollection.Remove(key);
+            var result = BaseCollection.Remove(key);
 
             if (result)
             {
-                this.RaiseCollectionEvents();
+                RaiseCollectionEvents();
 
                 var e = new NotifyCollectionChangedEventArgs(action: NotifyCollectionChangedAction.Remove,
                                                              changedItem: oldValue);
-                this.RaiseCollectionChanged(e);
+                RaiseCollectionChanged(e);
             }
 
             return result;
@@ -616,14 +619,14 @@ namespace MarcelJoachimKloubert.Collections
 
         void IDictionary.Remove(object key)
         {
-            this.Remove(this.ConvertTo<TKey>(key));
+            Remove(ConvertTo<TKey>(key));
         }
 
         [DebuggerStepThrough]
         private TValue TryGetOldValue(TKey key)
         {
             TValue result;
-            this.TryGetValue(key, out result);
+            TryGetValue(key, out result);
 
             return result;
         }
@@ -633,7 +636,7 @@ namespace MarcelJoachimKloubert.Collections
         /// </summary>
         public bool TryGetValue(TKey key, out TValue value)
         {
-            return this.BaseCollection.TryGetValue(key, out value);
+            return BaseCollection.TryGetValue(key, out value);
         }
 
         #endregion Methods (23)

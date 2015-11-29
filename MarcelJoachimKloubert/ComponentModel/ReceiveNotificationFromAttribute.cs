@@ -55,9 +55,9 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// </param>
         public ReceiveNotificationFromAttribute(string senderName, ReceiveFromOptions options = ReceiveFromOptions.Default, int sortOrder = 0)
         {
-            this.Options = options;
-            this.SenderName = senderName;
-            this.SortOrder = sortOrder;
+            Options = options;
+            SenderName = senderName;
+            SortOrder = sortOrder;
         }
 
         #endregion Constructors
