@@ -172,7 +172,7 @@ namespace MarcelJoachimKloubert.ComponentModel
 
             if (dbNullAsNull)
             {
-                if (DBNull.Value.Equals(dbNullAsNull))
+                if (DBNull.Value.Equals(obj))
                 {
                     obj = null;
                 }
@@ -464,9 +464,9 @@ namespace MarcelJoachimKloubert.ComponentModel
                     .Where(x => x != null);
 
             foreach (var property in propertiesToNotify.OrderBy(x => x.Attribute.SortOrder)
-                                                       .ThenBy(x => x.Property.Name, StringComparer.InvariantCulture)
+                                                       .ThenBy(x => x.Property.Name, StringComparer.Ordinal)
                                                        .Select(x => x.Property.Name)
-                                                       .Distinct(StringComparer.InvariantCulture))
+                                                       .Distinct(StringComparer.Ordinal))
             {
                 try
                 {
@@ -483,7 +483,7 @@ namespace MarcelJoachimKloubert.ComponentModel
         {
             var membersToNotify = new List<ReceiveValueFromArgs>();
 
-            var members = Enumerable.Empty<_MemberInfo>()
+            var members = Enumerable.Empty<MemberInfo>()
                                     .Concat(this.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
                                     .Concat(this.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
                                     .Concat(this.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic));
@@ -520,15 +520,15 @@ namespace MarcelJoachimKloubert.ComponentModel
 
             // now invoke them in a specific order
             foreach (var args in membersToNotify.OrderBy(x => x.Attribute.SortOrder)
-                                                .ThenBy(x => x.TargetMember.Name, StringComparer.InvariantCulture))
+                                                .ThenBy(x => x.TargetMember.Name, StringComparer.Ordinal))
             {
                 try
                 {
                     object resultToHandle = null;
 
-                    if (args.TargetMember is _MethodInfo)
+                    if (args.TargetMember is MethodInfo)
                     {
-                        var method = (_MethodInfo)args.TargetMember;
+                        var method = (MethodInfo)args.TargetMember;
 
                         object[] methodParams = null;
 
@@ -561,9 +561,9 @@ namespace MarcelJoachimKloubert.ComponentModel
                         resultToHandle = method.Invoke(obj: this,
                                                        parameters: methodParams);
                     }
-                    else if (args.TargetMember is _PropertyInfo)
+                    else if (args.TargetMember is PropertyInfo)
                     {
-                        var property = (_PropertyInfo)args.TargetMember;
+                        var property = (PropertyInfo)args.TargetMember;
 
                         if (property.Name == propertyName)
                         {
@@ -613,9 +613,9 @@ namespace MarcelJoachimKloubert.ComponentModel
 
                         resultToHandle = propertyValue;
                     }
-                    else if (args.TargetMember is _FieldInfo)
+                    else if (args.TargetMember is FieldInfo)
                     {
-                        var field = (_FieldInfo)args.TargetMember;
+                        var field = (FieldInfo)args.TargetMember;
 
                         object fieldValue = args.NewValue;
                         if (field.FieldType.Equals(typeof(IReceiveValueFromArgs)))
