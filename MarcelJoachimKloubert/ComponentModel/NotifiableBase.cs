@@ -626,11 +626,7 @@ namespace MarcelJoachimKloubert.ComponentModel
                         resultToHandle = fieldValue;
                     }
 
-                    var resultHandler = args.ResultHandler;
-                    if (resultHandler != null)
-                    {
-                        resultHandler(args, resultToHandle);
-                    }
+                    args.ResultHandler?.Invoke(args, resultToHandle);
                 }
                 catch (Exception ex)
                 {
