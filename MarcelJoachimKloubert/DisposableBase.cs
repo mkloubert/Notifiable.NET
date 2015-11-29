@@ -55,7 +55,7 @@ namespace MarcelJoachimKloubert
         {
             try
             {
-                this.Dispose(false);
+                Dispose(false);
             }
             catch
             {
@@ -86,8 +86,9 @@ namespace MarcelJoachimKloubert
         /// </summary>
         public bool IsDisposed
         {
-            get;
-            private set;
+            get { return Get(() => IsDisposed); }
+
+            private set { Set(value, () => IsDisposed); }
         }
 
         #endregion Properties (1)
@@ -101,20 +102,20 @@ namespace MarcelJoachimKloubert
         {
             try
             {
-                this.Dispose(true);
+                Dispose(true);
                 GC.SuppressFinalize(this);
             }
             catch (Exception ex)
             {
-                this.RaiseError(ex, true);
+                RaiseError(ex, true);
             }
         }
 
         private void Dispose(bool disposing)
         {
-            lock (this.SyncRoot)
+            lock (SyncRoot)
             {
-                if (disposing && this.IsDisposed)
+                if (disposing && IsDisposed)
                 {
                     return;
                 }
@@ -123,23 +124,23 @@ namespace MarcelJoachimKloubert
                 {
                     if (disposing)
                     {
-                        this.RaiseEventHandler(this.Disposing);
+                        RaiseEventHandler(Disposing);
                     }
 
-                    var isDisposed = disposing ? true : this.IsDisposed;
-                    this.OnDispose(disposing, ref isDisposed);
+                    var isDisposed = disposing || IsDisposed;
+                    OnDispose(disposing, ref isDisposed);
 
-                    this.IsDisposed = isDisposed;
-                    if (this.IsDisposed)
+                    IsDisposed = isDisposed;
+                    if (IsDisposed)
                     {
-                        this.RaiseEventHandler(this.Disposed);
+                        RaiseEventHandler(Disposed);
                     }
                 }
-                catch (Exception ex)
+                catch
                 {
                     if (disposing)
                     {
-                        throw ex;
+                        throw;
                     }
                 }
             }
@@ -160,11 +161,11 @@ namespace MarcelJoachimKloubert
                 throw new ArgumentNullException("action");
             }
 
-            this.InvokeForDisposable(action: (obj, state) => state.Action(obj),
-                                     actionState: new
-                                         {
-                                             Action = action,
-                                         });
+            InvokeForDisposable(action: (obj, state) => state.Action(obj),
+                                actionState: new
+                                    {
+                                        Action = action,
+                                    });
         }
 
         /// <summary>
@@ -179,8 +180,8 @@ namespace MarcelJoachimKloubert
         /// <exception cref="ObjectDisposedException">Object has been disposed.</exception>
         protected void InvokeForDisposable<TState>(Action<DisposableBase, TState> action, TState actionState)
         {
-            this.InvokeForDisposable<TState>(action: action,
-                                             actionStateFactory: (obj) => actionState);
+            InvokeForDisposable<TState>(action: action,
+                                        actionStateFactory: (obj) => actionState);
         }
 
         /// <summary>
@@ -205,7 +206,7 @@ namespace MarcelJoachimKloubert
                 throw new ArgumentNullException("funcStateFactory");
             }
 
-            this.InvokeForDisposable(
+            InvokeForDisposable(
                 func: (obj, state) =>
                     {
                         state.Action(obj,
@@ -237,11 +238,11 @@ namespace MarcelJoachimKloubert
                 throw new ArgumentNullException("func");
             }
 
-            return this.InvokeForDisposable(func: (obj, state) => state.Function(obj),
-                                            funcState: new
-                                                {
-                                                    Function = func,
-                                                });
+            return InvokeForDisposable(func: (obj, state) => state.Function(obj),
+                                       funcState: new
+                                           {
+                                               Function = func,
+                                           });
         }
 
         /// <summary>
@@ -258,8 +259,8 @@ namespace MarcelJoachimKloubert
         /// <exception cref="ObjectDisposedException">Object has been disposed.</exception>
         protected TResult InvokeForDisposable<TState, TResult>(Func<DisposableBase, TState, TResult> func, TState funcState)
         {
-            return this.InvokeForDisposable<TState, TResult>(func: func,
-                                                             funcStateFactory: (obj) => funcState);
+            return InvokeForDisposable<TState, TResult>(func: func,
+                                                        funcStateFactory: (obj) => funcState);
         }
 
         /// <summary>
@@ -286,7 +287,7 @@ namespace MarcelJoachimKloubert
                 throw new ArgumentNullException("funcStateFactory");
             }
 
-            return this.InvokeThreadSafe(
+            return InvokeThreadSafe(
                 func: (obj, state) =>
                     {
                         var dispObj = (DisposableBase)obj;
@@ -321,9 +322,9 @@ namespace MarcelJoachimKloubert
         /// <exception cref="ObjectDisposedException">Object has been disposed.</exception>
         protected void ThrowIfDisposed()
         {
-            if (this.IsDisposed)
+            if (IsDisposed)
             {
-                throw new ObjectDisposedException(this.GetType().FullName);
+                throw new ObjectDisposedException(GetType().FullName);
             }
         }
 
