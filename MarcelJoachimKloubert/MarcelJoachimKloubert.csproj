@@ -56,6 +56,7 @@
     <Compile Include="ComponentModel\ReceiveFromOptions.cs" />
     <Compile Include="ComponentModel\ReceiveNotificationFromAttribute.cs" />
     <Compile Include="ComponentModel\ReceiveValueFromAttribute.cs" />
+    <Compile Include="DisposableBase.cs" />
     <Compile Include="Extensions\IPropertyChangedContext.cs" />
     <Compile Include="Extensions\PropertyChange.cs" />
     <Compile Include="Extensions\PropertyChange.RegisterForPropertyChanged.cs">
