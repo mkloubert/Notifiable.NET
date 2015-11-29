@@ -45,7 +45,6 @@ namespace MarcelJoachimKloubert.ComponentModel
         #region Fields (2)
 
         private readonly IDictionary<string, object> _PROPERTIES;
-        private readonly object _SYNC_ROOT;
 
         #endregion Fields (2)
 
@@ -57,9 +56,9 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// <param name="syncRoot">The custom object for the <see cref="NotifiableBase.SyncRoot" /> property.</param>
         protected NotifiableBase(object syncRoot = null)
         {
-            this._SYNC_ROOT = syncRoot ?? new object();
+            SyncRoot = syncRoot ?? new object();
 
-            this._PROPERTIES = this.CreatePropertyStorage() ?? new Dictionary<string, object>();
+            _PROPERTIES = CreatePropertyStorage() ?? new Dictionary<string, object>();
         }
 
         #endregion Constructors (1)
@@ -83,10 +82,7 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// <summary>
         /// Gets the object for thread safe operations.
         /// </summary>
-        public object SyncRoot
-        {
-            get { return this._SYNC_ROOT; }
-        }
+        public object SyncRoot { get; private set; }
 
         #endregion Properties (1)
 
@@ -214,7 +210,7 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// <returns>The output value.</returns>
         protected virtual TTarget ConvertPropertyValue<TTarget>(string propertyName, object obj)
         {
-            return this.ConvertTo<TTarget>(obj);
+            return ConvertTo<TTarget>(obj);
         }
 
         /// <summary>
@@ -259,7 +255,7 @@ namespace MarcelJoachimKloubert.ComponentModel
         protected TProperty Get<TProperty>(Expression<Func<TProperty>> expr)
         {
             bool found;
-            return this.Get(out found, expr);
+            return Get(out found, expr);
         }
 
         /// <summary>
@@ -283,52 +279,8 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// </exception>
         protected TProperty Get<TProperty>(out bool found, Expression<Func<TProperty>> expr)
         {
-            return this.Get<TProperty>(propertyName: GetPropertyName(expr),
-                                       found: out found);
-        }
-
-        /// <summary>
-        /// Returns the value of a property.
-        /// </summary>
-        /// <typeparam name="TProperty">Type of the property.</typeparam>
-        /// <param name="propertyName">The name of the property.</param>
-        /// <returns>The value.</returns>
-        /// <exception cref="ArgumentException">
-        /// <paramref name="propertyName" /> is invalid.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="propertyName" /> is <see langword="null" />.
-        /// </exception>
-        /// <exception cref="MissingMemberException">
-        /// Property was not found.
-        /// </exception>
-        protected TProperty Get<TProperty>(IEnumerable<char> propertyName)
-        {
-            bool found;
-            return this.Get<TProperty>(propertyName: propertyName,
-                                       found: out found);
-        }
-
-        /// <summary>
-        /// Returns the value of a property.
-        /// </summary>
-        /// <typeparam name="TProperty">Type of the property.</typeparam>
-        /// <param name="found">Stores if value exists / was found or not.</param>
-        /// <param name="propertyName">The name of the property.</param>
-        /// <returns>The value.</returns>
-        /// <exception cref="ArgumentException">
-        /// <paramref name="propertyName" /> is invalid.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="propertyName" /> is <see langword="null" />.
-        /// </exception>
-        /// <exception cref="MissingMemberException">
-        /// Property was not found.
-        /// </exception>
-        protected TProperty Get<TProperty>(out bool found, IEnumerable<char> propertyName)
-        {
-            return this.Get<TProperty>(propertyName: AsString(propertyName),
-                                       found: out found);
+            return Get<TProperty>(propertyName: GetPropertyName(expr),
+                                  found: out found);
         }
 
         /// <summary>
@@ -349,8 +301,8 @@ namespace MarcelJoachimKloubert.ComponentModel
         protected TProperty Get<TProperty>(string propertyName)
         {
             bool found;
-            return this.Get<TProperty>(propertyName: propertyName,
-                                       found: out found);
+            return Get<TProperty>(propertyName: propertyName,
+                                  found: out found);
         }
 
         /// <summary>
@@ -371,17 +323,17 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// </exception>
         protected TProperty Get<TProperty>(out bool found, string propertyName)
         {
-            var pn = this.NormalizePropertyName(propertyName);
+            var pn = NormalizePropertyName(propertyName);
 
             object temp;
-            if (this._PROPERTIES.TryGetValue(pn, out temp))
+            if (_PROPERTIES.TryGetValue(pn, out temp))
             {
                 found = true;
-                return this.ConvertPropertyValue<TProperty>(pn, temp);
+                return ConvertPropertyValue<TProperty>(pn, temp);
             }
 
             found = false;
-            return this.GetDefaultPropertyValue<TProperty>(pn);
+            return GetDefaultPropertyValue<TProperty>(pn);
         }
 
         /// <summary>
@@ -402,7 +354,7 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// <returns>The default value.</returns>
         protected virtual TProperty GetDefaultPropertyValue<TProperty>(string propertyName)
         {
-            return this.GetDefaultValue<TProperty>();
+            return GetDefaultValue<TProperty>();
         }
 
         /// <summary>
@@ -441,7 +393,7 @@ namespace MarcelJoachimKloubert.ComponentModel
             var memberExpr = expr.Body as MemberExpression;
             if (memberExpr == null)
             {
-                throw new ArgumentException("expr.Body");
+                throw new ArgumentException("expr");
             }
 
             return ((PropertyInfo)memberExpr.Member).Name;
@@ -450,7 +402,7 @@ namespace MarcelJoachimKloubert.ComponentModel
         private void HandleReceiveNotificationFromAttributes<TProperty>(string propertyName, bool areDifferent)
         {
             var propertiesToNotify =
-                this.GetType()
+                GetType()
                     .GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
                     .Select(x =>
                             {
@@ -497,11 +449,11 @@ namespace MarcelJoachimKloubert.ComponentModel
             {
                 try
                 {
-                    this.RaisePropertyChanged(property);
+                    RaisePropertyChanged(property);
                 }
                 catch (Exception ex)
                 {
-                    this.RaiseError(ex);
+                    RaiseError(ex);
                 }
             }
         }
@@ -511,9 +463,9 @@ namespace MarcelJoachimKloubert.ComponentModel
             var membersToNotify = new List<ReceiveValueFromArgs>();
 
             var members = Enumerable.Empty<MemberInfo>()
-                                    .Concat(this.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-                                    .Concat(this.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-                                    .Concat(this.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic));
+                                    .Concat(GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                                    .Concat(GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                                    .Concat(GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic));
 
             // first collect members to notify
             foreach (var m in members)
@@ -664,7 +616,7 @@ namespace MarcelJoachimKloubert.ComponentModel
                 }
                 catch (Exception ex)
                 {
-                    this.RaiseError(ex);
+                    RaiseError(ex);
                 }
             }
         }
@@ -683,11 +635,11 @@ namespace MarcelJoachimKloubert.ComponentModel
                 throw new ArgumentNullException("action");
             }
 
-            this.InvokeThreadSafe(action: (obj, state) => state.Action(obj),
-                                  actionState: new
-                                      {
-                                          Action = action,
-                                      });
+            InvokeThreadSafe(action: (obj, state) => state.Action(obj),
+                             actionState: new
+                                 {
+                                     Action = action,
+                                 });
         }
 
         /// <summary>
@@ -701,8 +653,8 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// </exception>
         protected void InvokeThreadSafe<TState>(Action<NotifiableBase, TState> action, TState actionState)
         {
-            this.InvokeThreadSafe<TState>(action: action,
-                                          actionStateFactory: (obj) => actionState);
+            InvokeThreadSafe<TState>(action: action,
+                                     actionStateFactory: (obj) => actionState);
         }
 
         /// <summary>
@@ -723,10 +675,10 @@ namespace MarcelJoachimKloubert.ComponentModel
 
             if (actionStateFactory == null)
             {
-                throw new ArgumentNullException("funcStateFactory");
+                throw new ArgumentNullException("actionStateFactory");
             }
 
-            this.InvokeThreadSafe(
+            InvokeThreadSafe(
                 func: (obj, state) =>
                     {
                         state.Action(obj,
@@ -757,11 +709,11 @@ namespace MarcelJoachimKloubert.ComponentModel
                 throw new ArgumentNullException("func");
             }
 
-            return this.InvokeThreadSafe(func: (obj, state) => state.Function(obj),
-                                         funcState: new
-                                             {
-                                                 Function = func,
-                                             });
+            return InvokeThreadSafe(func: (obj, state) => state.Function(obj),
+                                    funcState: new
+                                        {
+                                            Function = func,
+                                        });
         }
 
         /// <summary>
@@ -777,8 +729,8 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// </exception>
         protected TResult InvokeThreadSafe<TState, TResult>(Func<NotifiableBase, TState, TResult> func, TState funcState)
         {
-            return this.InvokeThreadSafe<TState, TResult>(func: func,
-                                                          funcStateFactory: (obj) => funcState);
+            return InvokeThreadSafe<TState, TResult>(func: func,
+                                                     funcStateFactory: (obj) => funcState);
         }
 
         /// <summary>
@@ -804,9 +756,9 @@ namespace MarcelJoachimKloubert.ComponentModel
                 throw new ArgumentNullException("funcStateFactory");
             }
 
-            TResult result = default(TResult);
+            var result = default(TResult);
 
-            lock (this._SYNC_ROOT)
+            lock (SyncRoot)
             {
                 try
                 {
@@ -815,7 +767,7 @@ namespace MarcelJoachimKloubert.ComponentModel
                 }
                 catch (Exception ex)
                 {
-                    this.RaiseError(ex, true);
+                    RaiseError(ex, true);
                 }
             }
 
@@ -870,7 +822,7 @@ namespace MarcelJoachimKloubert.ComponentModel
             }
 
             var e = new ErrorEventArgs(ex);
-            var result = this.RaiseEventHandler(this.Error, e);
+            var result = RaiseEventHandler(Error, e);
 
             if (rethrow ?? !result)
             {
@@ -945,26 +897,7 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// </exception>
         protected bool RaisePropertyChanged<T>(Expression<Func<T>> expr)
         {
-            return this.RaisePropertyChanged(propertyName: GetPropertyName(expr));
-        }
-
-        /// <summary>
-        /// Raises the <see cref="NotifiableBase.PropertyChanged" /> event.
-        /// </summary>
-        /// <param name="propertyName">The name of the property.</param>
-        /// <returns>Handler was raised or not.</returns>
-        /// <exception cref="ArgumentException">
-        /// <paramref name="propertyName" /> is invalid.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="propertyName" /> is <see langword="null" />.
-        /// </exception>
-        /// <exception cref="MissingMemberException">
-        /// Property was not found.
-        /// </exception>
-        protected bool RaisePropertyChanged(IEnumerable<char> propertyName)
-        {
-            return this.RaisePropertyChanged(propertyName: AsString(propertyName));
+            return RaisePropertyChanged(propertyName: GetPropertyName(expr));
         }
 
         /// <summary>
@@ -983,9 +916,9 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// </exception>
         protected bool RaisePropertyChanged(string propertyName)
         {
-            var pn = this.NormalizePropertyName(propertyName);
+            var pn = NormalizePropertyName(propertyName);
 
-            var handler = this.PropertyChanged;
+            var handler = PropertyChanged;
             if (handler != null)
             {
                 handler(this, new PropertyChangedEventArgs(pn));
@@ -1020,34 +953,8 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// </exception>
         protected bool? Set<TProperty>(TProperty newValue, Expression<Func<TProperty>> expr)
         {
-            return this.Set<TProperty>(propertyName: GetPropertyName(expr),
-                                       newValue: newValue);
-        }
-
-        /// <summary>
-        /// Sets a property.
-        /// </summary>
-        /// <typeparam name="TProperty">Type of the property.</typeparam>
-        /// <param name="propertyName">The name of the property.</param>
-        /// <param name="newValue">The new value.</param>
-        /// <returns>
-        /// <paramref name="newValue" /> is different to current value (<see langword="true" />); otherwise <see langword="false" />.
-        /// <see langword="null" /> indicates that old and new value are different, but that
-        /// <see cref="NotifiableBase.PropertyChanged" /> event was NOT raised.
-        /// </returns>
-        /// <exception cref="ArgumentException">
-        /// <paramref name="propertyName" /> is invalid.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        /// <paramref name="propertyName" /> is <see langword="null" />.
-        /// </exception>
-        /// <exception cref="MissingMemberException">
-        /// Property was not found.
-        /// </exception>
-        protected bool? Set<TProperty>(TProperty newValue, IEnumerable<char> propertyName)
-        {
-            return this.Set<TProperty>(propertyName: AsString(propertyName),
-                                       newValue: newValue);
+            return Set<TProperty>(propertyName: GetPropertyName(expr),
+                                  newValue: newValue);
         }
 
         /// <summary>
@@ -1072,24 +979,24 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// </exception>
         protected bool? Set<TProperty>(TProperty newValue, string propertyName)
         {
-            var pn = this.NormalizePropertyName(propertyName);
+            var pn = NormalizePropertyName(propertyName);
 
-            TProperty oldValue = this.Get<TProperty>(pn);
+            TProperty oldValue = Get<TProperty>(pn);
 
-            var comparer = this.GetPropertyValueEqualityComparer<TProperty>(pn) ?? EqualityComparer<TProperty>.Default;
+            var comparer = GetPropertyValueEqualityComparer<TProperty>(pn) ?? EqualityComparer<TProperty>.Default;
             var areDifferent = !comparer.Equals(oldValue, newValue);
 
             bool? result = false;
 
             if (areDifferent)
             {
-                AddOrSet(this._PROPERTIES, pn, newValue);
+                AddOrSet(_PROPERTIES, pn, newValue);
 
-                result = this.RaisePropertyChanged(pn) ? (bool?)true : null;
+                result = RaisePropertyChanged(pn) ? (bool?)true : null;
             }
 
-            this.HandleReceiveValueFromAttributes<TProperty>(pn, oldValue, newValue, areDifferent);
-            this.HandleReceiveNotificationFromAttributes<TProperty>(pn, areDifferent);
+            HandleReceiveValueFromAttributes<TProperty>(pn, oldValue, newValue, areDifferent);
+            HandleReceiveNotificationFromAttributes<TProperty>(pn, areDifferent);
 
             return result;
         }
