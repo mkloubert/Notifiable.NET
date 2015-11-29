@@ -614,7 +614,7 @@ namespace MarcelJoachimKloubert.ComponentModel
                     {
                         var field = (FieldInfo)args.TargetMember;
 
-                        object fieldValue = args.NewValue;
+                        var fieldValue = args.NewValue;
                         if (field.FieldType.Equals(typeof(IReceiveValueFromArgs)))
                         {
                             // use argument object instead
@@ -920,7 +920,7 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// <exception cref="MissingMemberException">
         /// Property was not found.
         /// </exception>
-        protected bool RaisePropertyChanged(IEnumerable<char> propertyName)
+        protected bool RaisePropertyChanged(string propertyName)
         {
             var pn = NormalizePropertyName(propertyName);
 
@@ -985,11 +985,11 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// </exception>
         protected bool? Set<TProperty>(TProperty newValue,
                                        [CallerMemberName]
-                                       IEnumerable<char> propertyName = null)
+                                       string propertyName = null)
         {
             var pn = NormalizePropertyName(propertyName);
 
-            TProperty oldValue = Get<TProperty>(pn);
+            var oldValue = Get<TProperty>(pn);
 
             var comparer = GetPropertyValueEqualityComparer<TProperty>(pn) ?? EqualityComparer<TProperty>.Default;
             var areDifferent = !comparer.Equals(oldValue, newValue);
