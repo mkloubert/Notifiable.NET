@@ -67,10 +67,7 @@ namespace MarcelJoachimKloubert.Collections
         /// <summary>
         /// <see cref="NotifiableCollection{T}.BaseCollection"/>
         /// </summary>
-        public new IDictionary<TKey, TValue> BaseCollection
-        {
-            get { return (IDictionary<TKey, TValue>)base.BaseCollection; }
-        }
+        public new IDictionary<TKey, TValue> BaseCollection => (IDictionary<TKey, TValue>)base.BaseCollection;
 
         /// <summary>
         /// <see cref="IDictionary.IsFixedSize" />
@@ -88,15 +85,9 @@ namespace MarcelJoachimKloubert.Collections
         /// <summary>
         /// <see cref="IDictionary{TKey, TValue}.Keys" />
         /// </summary>
-        public ICollection<TKey> Keys
-        {
-            get { return BaseCollection.Keys; }
-        }
+        public ICollection<TKey> Keys => BaseCollection.Keys;
 
-        IEnumerable<TKey> IReadOnlyDictionary<TKey, TValue>.Keys
-        {
-            get { return this.Keys; }
-        }
+        IEnumerable<TKey> IReadOnlyDictionary<TKey, TValue>.Keys => this.Keys;
 
         ICollection IDictionary.Keys
         {
@@ -143,15 +134,9 @@ namespace MarcelJoachimKloubert.Collections
         /// <summary>
         /// <see cref="IDictionary{TKey, TValue}.Values" />
         /// </summary>
-        public ICollection<TValue> Values
-        {
-            get { return BaseCollection.Values; }
-        }
+        public ICollection<TValue> Values => BaseCollection.Values;
 
-        IEnumerable<TValue> IReadOnlyDictionary<TKey, TValue>.Values
-        {
-            get { return this.Values; }
-        }
+        IEnumerable<TValue> IReadOnlyDictionary<TKey, TValue>.Values => this.Values;
 
         ICollection IDictionary.Values
         {
@@ -210,7 +195,7 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (action == null)
             {
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
             }
 
             EditDictionary(action: (dict, state) => state.Action(dict),
@@ -251,12 +236,12 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (action == null)
             {
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
             }
 
             if (actionStateFactory == null)
             {
-                throw new ArgumentNullException("actionStateFactory");
+                throw new ArgumentNullException(nameof(actionStateFactory));
             }
 
             EditDictionary(
@@ -288,7 +273,7 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (func == null)
             {
-                throw new ArgumentNullException("func");
+                throw new ArgumentNullException(nameof(func));
             }
 
             return EditDictionary(func: (dict, state) => state.Function(dict),
@@ -333,12 +318,12 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (func == null)
             {
-                throw new ArgumentNullException("func");
+                throw new ArgumentNullException(nameof(func));
             }
 
             if (funcStateFactory == null)
             {
-                throw new ArgumentNullException("funcStateFactory");
+                throw new ArgumentNullException(nameof(funcStateFactory));
             }
 
             return EditCollection(
@@ -376,7 +361,7 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (actionYes == null)
             {
-                throw new ArgumentNullException("actionYes");
+                throw new ArgumentNullException(nameof(actionYes));
             }
 
             IfIDictionary(actionYes: (dict, state) => state.ActionYes(dict),
@@ -428,12 +413,12 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (actionYes == null)
             {
-                throw new ArgumentNullException("actionYes");
+                throw new ArgumentNullException(nameof(actionYes));
             }
 
             if (actionStateFactory == null)
             {
-                throw new ArgumentNullException("actionStateFactory");
+                throw new ArgumentNullException(nameof(actionStateFactory));
             }
 
             IfIDictionary(
@@ -451,10 +436,7 @@ namespace MarcelJoachimKloubert.Collections
                     },
                 funcNo: (dict, state) =>
                     {
-                        if (state.ActionNo != null)
-                        {
-                            state.ActionNo(dict, state.State);
-                        }
+                        state.ActionNo?.Invoke(dict, state.State);
 
                         return (object)null;
                     });
@@ -479,7 +461,7 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (funcYes == null)
             {
-                throw new ArgumentNullException("funcYes");
+                throw new ArgumentNullException(nameof(funcYes));
             }
 
             return IfIDictionary(funcYes: (dict, state) => state.FunctionYes(dict),
@@ -539,12 +521,12 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (funcYes == null)
             {
-                throw new ArgumentNullException("funcYes");
+                throw new ArgumentNullException(nameof(funcYes));
             }
 
             if (funcStateFactory == null)
             {
-                throw new ArgumentNullException("funcStateFactory");
+                throw new ArgumentNullException(nameof(funcStateFactory));
             }
 
             if (funcNo == null)

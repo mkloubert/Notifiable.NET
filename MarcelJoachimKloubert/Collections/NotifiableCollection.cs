@@ -121,18 +121,12 @@ namespace MarcelJoachimKloubert.Collections
         /// <summary>
         /// Gets the base collection.
         /// </summary>
-        public ICollection<T> BaseCollection
-        {
-            get { return _BASE_COLLECTION; }
-        }
+        public ICollection<T> BaseCollection => _BASE_COLLECTION;
 
         /// <summary>
         /// <see cref="ICollection{T}.Count" />
         /// </summary>
-        public int Count
-        {
-            get { return _BASE_COLLECTION.Count; }
-        }
+        public int Count => _BASE_COLLECTION.Count;
 
         /// <summary>
         /// Gets if the collection is in edit mode or not.
@@ -147,10 +141,7 @@ namespace MarcelJoachimKloubert.Collections
         /// <summary>
         /// <see cref="ICollection{T}.IsReadOnly" />
         /// </summary>
-        public bool IsReadOnly
-        {
-            get { return _BASE_COLLECTION.IsReadOnly; }
-        }
+        public bool IsReadOnly => _BASE_COLLECTION.IsReadOnly;
 
         /// <summary>
         /// <see cref="ICollection.IsSynchronized" />
@@ -253,7 +244,7 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (action == null)
             {
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
             }
 
             EditCollection(action: (coll, state) => state.Action(coll),
@@ -294,12 +285,12 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (action == null)
             {
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
             }
 
             if (actionStateFactory == null)
             {
-                throw new ArgumentNullException("actionStateFactory");
+                throw new ArgumentNullException(nameof(actionStateFactory));
             }
 
             EditCollection(
@@ -331,7 +322,7 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (func == null)
             {
-                throw new ArgumentNullException("func");
+                throw new ArgumentNullException(nameof(func));
             }
 
             return EditCollection(func: (coll, state) => state.Function(coll),
@@ -376,12 +367,12 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (func == null)
             {
-                throw new ArgumentNullException("func");
+                throw new ArgumentNullException(nameof(func));
             }
 
             if (funcStateFactory == null)
             {
-                throw new ArgumentNullException("funcStateFactory");
+                throw new ArgumentNullException(nameof(funcStateFactory));
             }
 
             var oldState = IsEditing;
@@ -491,12 +482,12 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (actionYes == null)
             {
-                throw new ArgumentNullException("actionYes");
+                throw new ArgumentNullException(nameof(actionYes));
             }
 
             if (actionStateFactory == null)
             {
-                throw new ArgumentNullException("actionStateFactory");
+                throw new ArgumentNullException(nameof(actionStateFactory));
             }
 
             IfICollection(
@@ -542,7 +533,7 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (funcYes == null)
             {
-                throw new ArgumentNullException("funcYes");
+                throw new ArgumentNullException(nameof(funcYes));
             }
 
             return IfICollection(funcYes: (coll, state) => state.FunctionYes(coll),
@@ -602,12 +593,12 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (funcYes == null)
             {
-                throw new ArgumentNullException("funcYes");
+                throw new ArgumentNullException(nameof(funcYes));
             }
 
             if (funcStateFactory == null)
             {
-                throw new ArgumentNullException("funcStateFactory");
+                throw new ArgumentNullException(nameof(funcStateFactory));
             }
 
             if (funcNo == null)
@@ -712,7 +703,7 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (e == null)
             {
-                throw new ArgumentNullException("e");
+                throw new ArgumentNullException(nameof(e));
             }
 
             if (IsEditing)

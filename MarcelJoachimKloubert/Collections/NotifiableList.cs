@@ -65,10 +65,7 @@ namespace MarcelJoachimKloubert.Collections
         /// <summary>
         /// <see cref="NotifiableCollection{T}.BaseCollection"/>
         /// </summary>
-        public new IList<T> BaseCollection
-        {
-            get { return (IList<T>)base.BaseCollection; }
-        }
+        public new IList<T> BaseCollection => (IList<T>)base.BaseCollection;
 
         /// <summary>
         /// <see cref="IList{T}.this[int]" />
@@ -142,7 +139,7 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (action == null)
             {
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
             }
 
             EditList(action: (list, state) => state.Action(list),
@@ -183,12 +180,12 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (action == null)
             {
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
             }
 
             if (actionStateFactory == null)
             {
-                throw new ArgumentNullException("actionStateFactory");
+                throw new ArgumentNullException(nameof(actionStateFactory));
             }
 
             EditList(
@@ -220,7 +217,7 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (func == null)
             {
-                throw new ArgumentNullException("func");
+                throw new ArgumentNullException(nameof(func));
             }
 
             return EditList(func: (list, state) => state.Function(list),
@@ -265,12 +262,12 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (func == null)
             {
-                throw new ArgumentNullException("func");
+                throw new ArgumentNullException(nameof(func));
             }
 
             if (funcStateFactory == null)
             {
-                throw new ArgumentNullException("funcStateFactory");
+                throw new ArgumentNullException(nameof(funcStateFactory));
             }
 
             return EditCollection(
@@ -302,7 +299,7 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (actionYes == null)
             {
-                throw new ArgumentNullException("actionYes");
+                throw new ArgumentNullException(nameof(actionYes));
             }
 
             IfIList(actionYes: (list, state) => state.ActionYes(list),
@@ -354,12 +351,12 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (actionYes == null)
             {
-                throw new ArgumentNullException("actionYes");
+                throw new ArgumentNullException(nameof(actionYes));
             }
 
             if (actionStateFactory == null)
             {
-                throw new ArgumentNullException("actionStateFactory");
+                throw new ArgumentNullException(nameof(actionStateFactory));
             }
 
             IfIList(
@@ -377,10 +374,7 @@ namespace MarcelJoachimKloubert.Collections
                     },
                 funcNo: (list, state) =>
                     {
-                        if (state.ActionNo != null)
-                        {
-                            state.ActionNo(list, state.State);
-                        }
+                        state.ActionNo?.Invoke(list, state.State);
 
                         return (object)null;
                     });
@@ -405,7 +399,7 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (funcYes == null)
             {
-                throw new ArgumentNullException("funcYes");
+                throw new ArgumentNullException(nameof(funcYes));
             }
 
             return IfIList(funcYes: (list, state) => state.FunctionYes(list),
@@ -465,12 +459,12 @@ namespace MarcelJoachimKloubert.Collections
         {
             if (funcYes == null)
             {
-                throw new ArgumentNullException("funcYes");
+                throw new ArgumentNullException(nameof(funcYes));
             }
 
             if (funcStateFactory == null)
             {
-                throw new ArgumentNullException("funcStateFactory");
+                throw new ArgumentNullException(nameof(funcStateFactory));
             }
 
             if (funcNo == null)
