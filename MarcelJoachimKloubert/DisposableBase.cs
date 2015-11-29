@@ -157,7 +157,7 @@ namespace MarcelJoachimKloubert
         {
             if (action == null)
             {
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
             }
 
             this.InvokeForDisposable(action: (obj, state) => state.Action(obj),
@@ -197,12 +197,12 @@ namespace MarcelJoachimKloubert
         {
             if (action == null)
             {
-                throw new ArgumentNullException("action");
+                throw new ArgumentNullException(nameof(action));
             }
 
             if (actionStateFactory == null)
             {
-                throw new ArgumentNullException("funcStateFactory");
+                throw new ArgumentNullException(nameof(actionStateFactory));
             }
 
             this.InvokeForDisposable(
@@ -234,7 +234,7 @@ namespace MarcelJoachimKloubert
         {
             if (func == null)
             {
-                throw new ArgumentNullException("func");
+                throw new ArgumentNullException(nameof(func));
             }
 
             return this.InvokeForDisposable(func: (obj, state) => state.Function(obj),
@@ -278,12 +278,12 @@ namespace MarcelJoachimKloubert
         {
             if (func == null)
             {
-                throw new ArgumentNullException("func");
+                throw new ArgumentNullException(nameof(func));
             }
 
             if (funcStateFactory == null)
             {
-                throw new ArgumentNullException("funcStateFactory");
+                throw new ArgumentNullException(nameof(funcStateFactory));
             }
 
             return this.InvokeThreadSafe(

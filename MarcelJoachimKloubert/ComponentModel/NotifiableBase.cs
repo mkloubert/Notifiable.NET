@@ -43,10 +43,9 @@ namespace MarcelJoachimKloubert.ComponentModel
     /// </summary>
     public abstract partial class NotifiableBase : INotifyPropertyChanged
     {
-        #region Fields (2)
+        #region Fields (1)
 
         private readonly IDictionary<string, object> _PROPERTIES;
-        private readonly object _SYNC_ROOT;
 
         #endregion Fields (2)
 
@@ -58,7 +57,7 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// <param name="syncRoot">The custom object for the <see cref="NotifiableBase.SyncRoot" /> property.</param>
         protected NotifiableBase(object syncRoot = null)
         {
-            this._SYNC_ROOT = syncRoot ?? new object();
+            SyncRoot = syncRoot ?? new object();
 
             this._PROPERTIES = this.CreatePropertyStorage() ?? new Dictionary<string, object>();
         }
@@ -84,10 +83,7 @@ namespace MarcelJoachimKloubert.ComponentModel
         /// <summary>
         /// Gets the object for thread safe operations.
         /// </summary>
-        public object SyncRoot
-        {
-            get { return this._SYNC_ROOT; }
-        }
+        public object SyncRoot { get; }
 
         #endregion Properties (1)
 
@@ -780,7 +776,7 @@ namespace MarcelJoachimKloubert.ComponentModel
 
             TResult result = default(TResult);
 
-            lock (this._SYNC_ROOT)
+            lock (SyncRoot)
             {
                 try
                 {
