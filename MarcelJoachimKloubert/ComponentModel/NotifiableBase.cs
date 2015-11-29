@@ -172,7 +172,7 @@ namespace MarcelJoachimKloubert.ComponentModel
 
             if (dbNullAsNull)
             {
-                if (DBNull.Value.Equals(dbNullAsNull))
+                if (DBNull.Value.Equals(obj))
                 {
                     obj = null;
                 }
